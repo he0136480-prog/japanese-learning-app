@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的日文學習程式</title>
+<style>
+  :root{
+    --bg:#f6f1e9;
+    --bg-glow:#fdf8f1;
+    --card:#ffffff;
+    --ink:#241f1a;
+    --ink-soft:#8a8175;
+    --line:#e9e1d4;
+    --accent:#c96f4a;
+    --accent-2:#a8763e;
+    --accent-soft:#f4e3d7;
+    --good:#3f8a5c;
+    --good-soft:#e2f2e7;
+    --bad:#c14d4d;
+    --bad-soft:#fbe7e7;
+    --radius:16px;
+    --shadow-sm:0 1px 2px rgba(40,30,20,0.05);
+    --shadow-md:0 6px 20px rgba(40,30,20,0.07);
+    --shadow-lg:0 14px 34px rgba(40,30,20,0.12);
+    --serif:ui-serif,Georgia,"Noto Serif JP","Noto Serif TC","PingFang TC",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Noto Sans JP","PingFang TC","Helvetica Neue",Arial,sans-serif;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1b1815;
+      --bg-glow:#241f1a;
+      --card:#26221e;
+      --ink:#f1ece3;
+      --ink-soft:#a39c8f;
+      --line:#3a342c;
+      --accent:#e2895c;
+      --accent-2:#e8a874;
+      --accent-soft:#3a2c22;
+      --good:#5cb37e;
+      --good-soft:#1f3327;
+      --bad:#e2726f;
+      --bad-soft:#3a2323;
+      --shadow-sm:0 1px 2px rgba(0,0,0,0.25);
+      --shadow-md:0 6px 20px rgba(0,0,0,0.35);
+      --shadow-lg:0 14px 34px rgba(0,0,0,0.45);
+      color-scheme:dark;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, var(--bg-glow) 0%, transparent 60%),
+      var(--bg);
+    background-attachment:fixed;
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  a{ color:var(--accent-2); }
+  :focus-visible{
+    outline:3px solid var(--accent);
+    outline-offset:2px;
+    border-radius:6px;
+  }
+  header{
+    padding:36px 24px 0;
+    max-width:800px;
+    margin:0 auto;
+  }
+  h1{
+    font-family:var(--serif);
+    font-size:1.9rem;
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:0.92rem;
+    margin-bottom:20px;
+  }
+  nav{
+    display:flex;
+    gap:4px;
+    max-width:800px;
+    margin:0 auto;
+    padding:6px;
+    background:var(--accent-soft);
+    border-radius:16px;
+    overflow-x:auto;
+  }
+  nav button{
+    border:none;
+    background:none;
+    padding:10px 16px;
+    font-size:0.88rem;
+    font-weight:600;
+    color:var(--accent-2);
+    cursor:pointer;
+    border-radius:11px;
+    white-space:nowrap;
+    transition:background .18s ease, color .18s ease, box-shadow .18s ease;
+  }
+  nav button:hover{ color:var(--accent); }
+  nav button.active{
+    background:var(--card);
+    color:var(--accent);
+    box-shadow:var(--shadow-sm);
+  }
+  main{
+    max-width:800px;
+    margin:0 auto;
+    padding:24px;
+  }
+  .panel{display:none;}
+  .panel.active{ display:block; animation:fadeIn .3s ease; }
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(4px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow-sm);
+    transition:box-shadow .2s ease, transform .2s ease;
+  }
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 12px;
+    text-align:center;
+    box-shadow:var(--shadow-sm);
+  }
+  .stat .num{
+    font-family:var(--serif);
+    font-size:1.9rem;
+    font-weight:700;
+    color:var(--accent);
+    line-height:1.1;
+  }
+  .stat .label{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+
+  /* Flashcard */
+  #flash-area{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .flashcard{
+    width:100%;
+    max-width:420px;
+    min-height:220px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:28px 24px;
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:var(--shadow-md);
+    transition:box-shadow .2s ease, transform .15s ease;
+  }
+  .flashcard:hover{ box-shadow:var(--shadow-lg); transform:translateY(-2px); }
+  .flashcard:active{ transform:translateY(0) scale(0.995); }
+  .flashcard .term{
+    font-family:var(--serif);
+    font-size:1.9rem;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .icon-btn{
+    border:none;
+    background:var(--accent-soft);
+    color:var(--accent);
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    font-size:1.1rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{ transform:scale(1.08); }
+  .icon-btn:active{ transform:scale(0.94); }
+  .icon-btn.listening{
+    background:var(--bad);
+    color:#fff;
+    animation:pulse 1s infinite;
+  }
+  @keyframes pulse{
+    0%{opacity:1;} 50%{opacity:0.55;} 100%{opacity:1;}
+  }
+  .pron-result{
+    margin-top:10px;
+    font-size:0.9rem;
+    padding:8px 12px;
+    border-radius:10px;
+    animation:fadeIn .2s ease;
+  }
+  .pron-result.ok{ background:var(--good-soft); color:var(--good); }
+  .pron-result.bad{ background:var(--bad-soft); color:var(--bad); }
+  .word-img{
+    width:100%;
+    max-width:260px;
+    max-height:160px;
+    object-fit:cover;
+    border-radius:14px;
+    margin-bottom:10px;
+    box-shadow:var(--shadow-sm);
+  }
+  .word-emoji{
+    font-size:3.4rem;
+    margin-bottom:8px;
+  }
+  .credit{
+    font-size:0.68rem;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+    opacity:0.8;
+  }
+  .flashcard .reading-row{
+    font-size:0.95rem;
+    color:var(--ink-soft);
+    letter-spacing:0.3px;
+    margin-top:4px;
+  }
+  .pos-tag{
+    display:inline-block;
+    font-size:0.7rem;
+    padding:3px 12px;
+    border-radius:20px;
+    background:var(--accent-soft);
+    color:var(--accent-2);
+    margin-top:12px;
+    font-weight:700;
+    letter-spacing:0.03em;
+  }
+  .flashcard .meaning{
+    font-family:var(--serif);
+    font-size:1.25rem;
+    color:var(--ink);
+    margin-top:10px;
+    font-weight:600;
+  }
+  .note-box{
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    background:var(--accent-soft);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-top:12px;
+    text-align:left;
+    line-height:1.7;
+  }
+  .flashcard .example{
+    font-size:0.9rem;
+    color:var(--ink-soft);
+    margin-top:10px;
+    font-style:normal;
+  }
+  .example-zh{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    margin-top:2px;
+    opacity:0.85;
+  }
+  .flashcard .hint{
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    margin-top:16px;
+  }
+  .btn-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  button.action{
+    border:none;
+    border-radius:12px;
+    padding:12px 22px;
+    font-size:0.95rem;
+    cursor:pointer;
+    font-weight:600;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+  }
+  button.action:active{ transform:scale(0.97); }
+  .btn-know{ background:var(--good); color:#fff; box-shadow:0 4px 14px rgba(63,138,92,0.3); }
+  .btn-know:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(63,138,92,0.38); }
+  .btn-unknow{ background:var(--bad); color:#fff; box-shadow:0 4px 14px rgba(193,77,77,0.3); }
+  .btn-unknow:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(193,77,77,0.38); }
+  .btn-primary{ background:var(--accent); color:#fff; box-shadow:0 4px 14px rgba(201,111,74,0.32); }
+  .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(201,111,74,0.4); }
+  .btn-ghost{ background:var(--card); border:1px solid var(--line); color:var(--ink); }
+  .btn-ghost:hover{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-2); }
+
+  /* Quiz */
+  .quiz-q{
+    font-family:var(--serif);
+    font-size:1.4rem;
+    font-weight:600;
+    margin-bottom:16px;
+  }
+  .quiz-opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    padding:13px 16px;
+    margin-bottom:10px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--card);
+    cursor:pointer;
+    font-size:0.95rem;
+    color:var(--ink);
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .quiz-opt:not(:disabled):hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .quiz-opt:not(:disabled):active{ transform:scale(0.99); }
+  .quiz-opt.correct{ background:var(--good-soft); border-color:var(--good); color:var(--good); font-weight:700; }
+  .quiz-opt.wrong{ background:var(--bad-soft); border-color:var(--bad); color:var(--bad); font-weight:700; }
+
+  /* Manage */
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  input, textarea, select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    font-size:0.9rem;
+    font-family:inherit;
+    background:var(--card);
+    color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  textarea{resize:vertical;}
+  label.field-label{
+    display:block;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .word-list{
+    max-height:340px;
+    overflow-y:auto;
+  }
+  .word-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+    gap:10px;
+  }
+  .word-item:last-child{ border-bottom:none; }
+  .word-item .info b{font-size:0.95rem;}
+  .word-item .info span{
+    display:block;
+    color:var(--ink-soft);
+    font-size:0.82rem;
+  }
+  .word-item .box-tag{
+    font-size:0.7rem;
+    padding:3px 10px;
+    border-radius:20px;
+    background:var(--accent-soft);
+    color:var(--accent-2);
+    margin-right:8px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .del-btn{
+    border:none;
+    background:none;
+    color:var(--bad);
+    cursor:pointer;
+    font-size:1.1rem;
+    transition:transform .15s ease;
+    border-radius:8px;
+    padding:4px 6px;
+  }
+  .del-btn:hover{ transform:scale(1.12); background:var(--bad-soft); }
+  .heatmap{
+    display:grid;
+    grid-template-columns:repeat(15,1fr);
+    gap:5px;
+  }
+  .heatmap .day{
+    aspect-ratio:1;
+    border-radius:6px;
+    background:var(--line);
+    transition:background .15s ease, transform .15s ease;
+  }
+  .heatmap .day:hover{ transform:scale(1.15); }
+  .heatmap .day.active{ background:var(--accent); box-shadow:0 2px 6px rgba(201,111,74,0.35); }
+  .empty-msg{
+    color:var(--ink-soft);
+    text-align:center;
+    padding:34px 0;
+  }
+  h3{
+    margin-top:0;
+    font-family:var(--serif);
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+
+  .idiom-subtab.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  .grammar-tag-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+  }
+  .grammar-tag{
+    display:inline-block;
+    font-size:0.72rem;
+    padding:4px 11px;
+    border-radius:20px;
+    background:var(--accent-soft);
+    color:var(--accent-2);
+    font-weight:600;
+    cursor:pointer;
+    border:none;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .grammar-tag:hover{ background:var(--accent); color:#fff; transform:translateY(-1px); }
+
+  /* Reading */
+  .reading-card{cursor:pointer;}
+  .reading-card:hover{ box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .reading-text{
+    font-family:var(--serif);
+    line-height:2;
+    font-size:1.05rem;
+    letter-spacing:0.02em;
+  }
+  .q-block{margin-bottom:18px;}
+  .q-title{font-weight:600;margin-bottom:8px;}
+  .q-opt{
+    display:block;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:6px;
+    cursor:pointer;
+    font-size:0.92rem;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .q-opt:hover{ border-color:var(--accent); }
+  .q-opt input{width:auto;margin-right:8px;}
+  .q-opt.opt-correct{ background:var(--good-soft); border-color:var(--good); font-weight:700; }
+  .q-opt.opt-wrong{ background:var(--bad-soft); border-color:var(--bad); font-weight:700; }
+
+  @media (max-width:480px){
+    header{ padding:24px 16px 0; }
+    h1{ font-size:1.5rem; }
+    main{ padding:16px; }
+    .form-grid{ grid-template-columns:1fr; }
+    .stat-row{ grid-template-columns:1fr; }
+    .card{ padding:16px; }
+    .flashcard{ padding:22px 16px; min-height:auto; }
+    .heatmap{ grid-template-columns:repeat(10,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 我的日文學習程式</h1>
+  <div class="sub">文法邏輯 ・ 單字卡複習 ・ 小測驗 ・ 學習進度</div>
+</header>
+
+<nav role="tablist" aria-label="主要功能分頁">
+  <button class="tab-btn active" data-tab="grammar" role="tab" aria-selected="true">文法邏輯</button>
+  <button class="tab-btn" data-tab="flash" role="tab" aria-selected="false">單字卡</button>
+  <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">小測驗</button>
+  <button class="tab-btn" data-tab="reading" role="tab" aria-selected="false">閱讀</button>
+  <button class="tab-btn" data-tab="idioms" role="tab" aria-selected="false">慣用句・ことわざ</button>
+  <button class="tab-btn" data-tab="progress" role="tab" aria-selected="false">學習進度</button>
+  <button class="tab-btn" data-tab="manage" role="tab" aria-selected="false">單字庫管理</button>
+</nav>
+
+<main>
+
+  <!-- GRAMMAR LOGIC (書本式，預設首頁) -->
+  <section class="panel active" id="panel-grammar" role="tabpanel" aria-label="文法邏輯">
+    <div id="grammar-area"></div>
+  </section>
+
+  <!-- FLASHCARD -->
+  <section class="panel" id="panel-flash" role="tabpanel" aria-label="單字卡">
+    <div class="card" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label class="sub" for="voice-select" style="margin:0;">發音語音：</label>
+      <select id="voice-select" style="flex:1;min-width:180px;"></select>
+      <button class="action btn-ghost" id="voice-test-btn">試聽</button>
+    </div>
+    <div id="flash-area"></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="panel" id="panel-quiz" role="tabpanel" aria-label="小測驗">
+    <div class="card" id="quiz-area"></div>
+  </section>
+
+  <!-- READING -->
+  <section class="panel" id="panel-reading" role="tabpanel" aria-label="閱讀">
+    <div id="reading-area"></div>
+  </section>
+
+  <!-- IDIOMS (獨立支線) -->
+  <section class="panel" id="panel-idioms" role="tabpanel" aria-label="慣用句・ことわざ">
+    <div class="sub" style="margin-bottom:14px;">獨立的慣用句・ことわざ學習支線，有自己的進度，不會混進主要單字庫</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="action btn-ghost idiom-subtab active" data-idiom-tab="flash">慣用句卡</button>
+      <button class="action btn-ghost idiom-subtab" data-idiom-tab="quiz">慣用句測驗</button>
+    </div>
+    <div id="idiom-flash-area"></div>
+    <div class="card" id="idiom-quiz-area" style="display:none;"></div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section class="panel" id="panel-progress" role="tabpanel" aria-label="學習進度">
+    <div class="stat-row">
+      <div class="stat"><div style="font-size:1.1rem;">🔥</div><div class="num" id="stat-streak">0</div><div class="label">連續學習天數</div></div>
+      <div class="stat"><div style="font-size:1.1rem;">📚</div><div class="num" id="stat-total">0</div><div class="label">單字總數</div></div>
+      <div class="stat"><div style="font-size:1.1rem;">⭐</div><div class="num" id="stat-mastered">0</div><div class="label">已熟練單字</div></div>
+    </div>
+    <div class="card">
+      <h3>各單元進度</h3>
+      <div id="module-progress"></div>
+    </div>
+    <div class="card">
+      <h3>最近 30 天學習紀錄</h3>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+    <div class="card">
+      <h3>測驗歷史</h3>
+      <div id="quiz-history"></div>
+    </div>
+  </section>
+
+  <!-- MANAGE -->
+  <section class="panel" id="panel-manage" role="tabpanel" aria-label="單字庫管理">
+    <div class="card">
+      <h3 id="form-title">新增單字 / 慣用語</h3>
+      <div class="form-grid">
+        <input id="in-jp" placeholder="日文（例：学校）" aria-label="日文">
+        <select id="in-pos" aria-label="詞性">
+          <option value="">詞性（選填）</option>
+          <option value="名詞">名詞</option>
+          <option value="動詞">動詞</option>
+          <option value="い形容詞">い形容詞</option>
+          <option value="な形容詞">な形容詞</option>
+          <option value="副詞">副詞</option>
+          <option value="助詞">助詞</option>
+          <option value="慣用句">慣用句</option>
+        </select>
+      </div>
+      <div class="form-grid">
+        <input id="in-kana" placeholder="假名讀音（選填，例：がっこう）" aria-label="假名讀音">
+        <input id="in-romaji" placeholder="羅馬拼音（選填，例：gakkou）" aria-label="羅馬拼音">
+      </div>
+      <input id="in-kanji" placeholder="漢字拆解說明（選填，例：学(學習)+校(場所)=學校）" style="margin-bottom:10px;" aria-label="漢字拆解說明">
+      <input id="in-phonics" placeholder="發音原理說明（選填，例：っ是促音，要停頓一拍...）" style="margin-bottom:10px;" aria-label="發音原理說明">
+
+      <div class="sub" style="margin-bottom:6px;">中文意思與例句（一個字常有不只一個意思，最多可填 3 組，第一組必填）</div>
+      <div class="form-grid">
+        <input id="in-zh-1" placeholder="意思 1（必填）" aria-label="意思1">
+        <input id="in-example-1" placeholder="例句 1（選填）" aria-label="例句1">
+      </div>
+      <input id="in-example-zh-1" placeholder="例句 1 中文翻譯（選填）" style="margin-bottom:10px;" aria-label="例句1中文翻譯">
+      <div class="form-grid">
+        <input id="in-zh-2" placeholder="意思 2（選填）" aria-label="意思2">
+        <input id="in-example-2" placeholder="例句 2（選填）" aria-label="例句2">
+      </div>
+      <input id="in-example-zh-2" placeholder="例句 2 中文翻譯（選填）" style="margin-bottom:10px;" aria-label="例句2中文翻譯">
+      <div class="form-grid">
+        <input id="in-zh-3" placeholder="意思 3（選填）" aria-label="意思3">
+        <input id="in-example-3" placeholder="例句 3（選填）" aria-label="例句3">
+      </div>
+      <input id="in-example-zh-3" placeholder="例句 3 中文翻譯（選填）" style="margin-bottom:10px;" aria-label="例句3中文翻譯">
+      <div class="btn-row">
+        <button class="action btn-primary" id="add-word-btn">新增</button>
+        <button class="action btn-ghost" id="cancel-edit-btn" style="display:none;">取消編輯</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>批次匯入</h3>
+      <div class="sub" style="margin-bottom:8px;">每行一組，格式：日文 - 中文意思（例句可省略）</div>
+      <textarea id="bulk-input" rows="4" placeholder="猫 - 貓&#10;犬 - 狗" aria-label="批次匯入內容"></textarea>
+      <button class="action btn-primary" id="bulk-add-btn" style="margin-top:8px;">批次新增</button>
+    </div>
+
+    <div class="card">
+      <h3>單字庫（<span id="word-count">0</span>）</h3>
+      <div class="word-list" id="word-list"></div>
+    </div>
+
+    <div class="card">
+      <h3>資料備份</h3>
+      <div class="sub" style="margin-bottom:10px;">資料只存在這個瀏覽器裡，清除瀏覽器資料、換電腦、或搬動這個資料夾都可能導致資料遺失，建議不定期匯出備份一份</div>
+      <div class="btn-row">
+        <button class="action btn-ghost" id="export-btn">匯出備份</button>
+        <button class="action btn-ghost" id="import-btn">匯入備份</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json" style="display:none;" aria-label="匯入備份檔案">
+    </div>
+
+    <div class="card">
+      <h3>重設單字庫</h3>
+      <div class="sub" style="margin-bottom:10px;">會清空目前所有單字，換成 20 個較簡單的起始單字（進度記錄不受影響）</div>
+      <button class="action btn-ghost" id="reset-vocab-btn">重設為簡易起始單字</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const LS_VOCAB = 'jl_vocab';
+const LS_LOG = 'jl_studylog';
+const LS_QUIZ = 'jl_quizhistory';
+
+const BOX_INTERVAL_DAYS = [0,1,2,4,7,14]; // index = box number (1-5)
+
+const SEED = [
+  { jp:"学校", kana:"がっこう", romaji:"gakkou", zh:"學校", example:"私は毎日学校へ行きます。", exampleZh:"我每天去學校。", pos:"名詞", emoji:"🏫",
+    image:"https://api.openverse.org/v1/images/f8494753-e81f-4a1f-a4e6-d86e36385c52/thumb/", credit:"matsuyuki", creditUrl:"https://www.flickr.com/photos/12173213@N00/4837123321",
+    kanjiBreakdown:"学（學習）+校（建築物、機構）＝學習的場所＝學校",
+    phonicsNote:"「っ」是促音，發音時要停頓一拍再送出後面的こ，像是先閉氣一瞬間再爆破出音；がっこう要唸成 ga－（停頓）－ko－u 四拍，不能唸快變成三拍。" },
+  { jp:"先生", kana:"せんせい", romaji:"sensei", zh:"老師", example:"田中先生は親切です。", exampleZh:"田中老師很親切。", pos:"名詞", emoji:"👩‍🏫",
+    image:"https://api.openverse.org/v1/images/b2516dff-536e-49a9-9f64-a465c7b59c48/thumb/", credit:"spirobolos", creditUrl:"https://www.flickr.com/photos/74928973@N02/8501565632",
+    kanjiBreakdown:"先（先、之前）+生（出生、活著）＝比自己早出生、有經驗的人＝老師",
+    phonicsNote:"「せんせい」的最後一段「せい」是長音，母音え要拉長一拍，唸起來像せんせーい，不能唸成短促的せんせ，長短音在日文裡會改變單字，不能省略。" },
+  { jp:"友達", kana:"ともだち", romaji:"tomodachi", zh:"朋友", example:"友達と映画を見ました。", exampleZh:"我和朋友看了電影。", pos:"名詞", emoji:"🧑‍🤝‍🧑",
+    image:"https://api.openverse.org/v1/images/f0127628-349b-4173-9fd2-b44fce90ce7b/thumb/", credit:"gogogadgetscott", creditUrl:"https://www.flickr.com/photos/44636962@N00/2323136186",
+    kanjiBreakdown:"友（朋友）+達（表示複數的接尾詞，類似中文的「們」）＝朋友（們）",
+    phonicsNote:"四個音節と・も・だ・ち，重音落在後半，だ的音會稍微提高一點，不是每個音節都平平地唸過去。" },
+  { jp:"電車", kana:"でんしゃ", romaji:"densha", zh:"電車、火車", example:"電車で学校へ行きます。", exampleZh:"我搭電車去學校。", pos:"名詞", emoji:"🚃",
+    image:"https://api.openverse.org/v1/images/06addc59-4195-45d9-98ec-9c3d2c96f5ae/thumb/", credit:"Jens Rost", creditUrl:"https://www.flickr.com/photos/56380734@N05/9220185946",
+    kanjiBreakdown:"電（電力）+車（車輛）＝用電力行駛的車＝電車、火車",
+    phonicsNote:"車在這裡唸しゃ，是拗音，發音時「し」和「や」要黏在一起唸成一個音節，不能分開唸成兩拍。" },
+  { jp:"病院", kana:"びょういん", romaji:"byouin", zh:"醫院", example:"祖母は病院にいます。", exampleZh:"祖母在醫院裡。", pos:"名詞", emoji:"🏥",
+    image:"https://api.openverse.org/v1/images/a951e833-21fe-4597-90e3-83330689b643/thumb/", credit:"Montgomery County Planning Commission", creditUrl:"https://www.flickr.com/photos/75012107@N05/9400354369",
+    kanjiBreakdown:"病（生病）+院（機構、場所）＝治療生病的場所＝醫院",
+    phonicsNote:"「びょう」是拗音加長音的組合，び和ょ黏成一個音節唸びょ，後面的う再拉長一拍，合起來是兩拍，容易被外觀的假名數量誤導唸成三個分開的音。" },
+  { jp:"天気", kana:"てんき", romaji:"tenki", zh:"天氣", example:"今日は天気がいいです。", exampleZh:"今天天氣很好。", pos:"名詞", emoji:"☀️",
+    image:"https://api.openverse.org/v1/images/730fb523-adeb-40dc-bd75-71719e535e7e/thumb/", credit:"Cindy Funk", creditUrl:"https://www.flickr.com/photos/84858864@N00/2514854823",
+    kanjiBreakdown:"天（天空、自然）+気（氣、狀態）＝天空的狀態＝天氣",
+    phonicsNote:"「てんき」中的ん是撥音，發音時要用鼻腔延長一拍，嘴巴大致保持前一個音的形狀，不要急著把它唸成單純接上下一個音的子音。" },
+  { jp:"元気", kana:"げんき", romaji:"genki", zh:"有精神的、健康的", example:"祖父はいつも元気です。", exampleZh:"祖父總是很有精神。", pos:"な形容詞", emoji:"💪",
+    image:"https://api.openverse.org/v1/images/b3ccba11-1d30-4841-9a93-099555b5e2c9/thumb/", credit:"Peter Mooney", creditUrl:"https://www.flickr.com/photos/25874444@N00/14335970369",
+    kanjiBreakdown:"元（根本、原本）+気（氣、精神）＝原本充沛的精神＝有活力的、健康的",
+    phonicsNote:"「げ」是濁音，發音時聲帶要振動，和清音「け」差別在有沒有振動聲帶，可以摸著喉嚨感覺げ有震動、け沒有，濁音點不能省略，否則會變成完全不同的字。" },
+  { jp:"静か", kana:"しずか", romaji:"shizuka", zh:"安靜的", example:"図書館はとても静かです。", exampleZh:"圖書館非常安靜。", pos:"な形容詞", emoji:"🤫",
+    image:"https://api.openverse.org/v1/images/fce0423e-cc74-4147-8d37-97a9a5942132/thumb/", credit:"Kathleen Tyler Conklin", creditUrl:"https://www.flickr.com/photos/79865753@N00/2312983595",
+    kanjiBreakdown:"静（平靜、寂靜）+か（な形容詞常見語尾）＝平靜的狀態＝安靜的",
+    phonicsNote:"「しずか」的「ず」是濁音，和清音「す」差在舌位相同、但多了聲帶振動這個動作，發音時可以先唸す再加上振動感覺差別。" },
+  { jp:"高い", kana:"たかい", romaji:"takai", zh:"高的、貴的", example:"このビルはとても高いです。", exampleZh:"這棟大樓非常高。", pos:"い形容詞", emoji:"📈",
+    image:"https://api.openverse.org/v1/images/b89e7fe8-566f-4414-b31e-19d5f968607f/thumb/", credit:"kayadams.com", creditUrl:"https://www.flickr.com/photos/29326506@N04/2806573660",
+    kanjiBreakdown:"高（高度、高聳）+い（い形容詞語尾）＝高的、貴的",
+    phonicsNote:"「たかい」三個音節平平地唸，重音不明顯（平板型），這點跟需要特別注意重音位置的單字不同，唸的時候不用刻意在哪個音節加重。" },
+  { jp:"新しい", kana:"あたらしい", romaji:"atarashii", zh:"新的", example:"新しい靴を買いました。", exampleZh:"我買了新鞋子。", pos:"い形容詞", emoji:"✨",
+    image:"https://api.openverse.org/v1/images/71520089-a73e-4c8b-a227-0d7b2981ad03/thumb/", credit:"laRuth", creditUrl:"https://www.flickr.com/photos/33953321@N00/536581799",
+    kanjiBreakdown:"新（新的）+しい（い形容詞語尾）＝新的",
+    phonicsNote:"五個音節あ・た・ら・し・い，重音落在「ら」，唸成あた「ら」しい的感覺，若重音放錯位置，聽起來會很不自然。" },
+  { jp:"食べる", kana:"たべる", romaji:"taberu", zh:"吃", example:"朝ごはんを食べました。", exampleZh:"我吃了早餐。", pos:"動詞", emoji:"🍽️",
+    image:"https://api.openverse.org/v1/images/f933fd41-eb95-4e3d-8893-b8d0cd8c1504/thumb/", credit:"ray_explores", creditUrl:"https://www.flickr.com/photos/66801522@N00/14928548505",
+    kanjiBreakdown:"食（食物、吃）+べる（動詞語尾）＝吃",
+    phonicsNote:"這是一段動詞（る動詞），る前面是え段音（べ），變化時只要去掉る就好，例如食べます、食べて，不像五段動詞語幹會跟著母音改變，規則相對單純。" },
+  { jp:"飲む", kana:"のむ", romaji:"nomu", zh:"喝", example:"毎朝水を飲みます。", exampleZh:"我每天早上喝水。", pos:"動詞", emoji:"🥤",
+    image:"https://api.openverse.org/v1/images/58eda9fb-3a9d-46df-b7a4-23271f7f02a1/thumb/", credit:"Eldkvast", creditUrl:"https://www.flickr.com/photos/84159903@N00/10246255394",
+    kanjiBreakdown:"飲（飲用）+む（動詞語尾）＝喝",
+    phonicsNote:"這是五段動詞，語幹的む會依後面接的內容變化到不同段：飲みます（み段）、飲んで（撥音便）、飲まない（ま段），語幹在「五段」之間移動，正是五段動詞名稱的由來。" },
+  { jp:"行く", kana:"いく", romaji:"iku", zh:"去", example:"来週、京都へ行きます。", exampleZh:"下週我要去京都。", pos:"動詞", emoji:"🚶",
+    image:"https://api.openverse.org/v1/images/8ff87526-be2c-4b3f-99eb-040e1314c5af/thumb/", credit:"Julien.Belli", creditUrl:"https://www.flickr.com/photos/125615321@N04/31837207660",
+    kanjiBreakdown:"行（前往、進行）+く（動詞語尾）＝去",
+    phonicsNote:"行く的て形是「行って」，屬於促音便，這是五段動詞裡的特殊例外——一般く結尾動詞的て形是「いて」（例如書く→書いて），但行く要記成「行って」，不能套用一般規則。" },
+  { jp:"話す", kana:"はなす", romaji:"hanasu", zh:"說、講話", example:"先生と日本語で話しました。", exampleZh:"我用日語和老師交談了。", pos:"動詞", emoji:"💬",
+    image:"https://api.openverse.org/v1/images/174f88ba-a504-48eb-bf8d-dcc70b42ee44/thumb/", credit:"AnyaLogic", creditUrl:"https://www.flickr.com/photos/7387371@N06/2315310261",
+    kanjiBreakdown:"話（話語、談話）+す（動詞語尾）＝說、講話",
+    phonicsNote:"四個音節は・な・す，重音落在第一個音節「は」，之後平平地唸下去，和「花」（はな，重音在後）容易搞混，要靠重音的高低差來區分同音詞。" },
+  { jp:"買う", kana:"かう", romaji:"kau", zh:"買", example:"デパートで靴を買いました。", exampleZh:"我在百貨公司買了鞋子。", pos:"動詞", emoji:"🛍️",
+    image:"https://api.openverse.org/v1/images/4b31199d-246d-4df1-ab5b-851bdcc13def/thumb/", credit:"JeepersMedia", creditUrl:"https://www.flickr.com/photos/39160147@N03/13884040571",
+    kanjiBreakdown:"買（購買）+う（動詞語尾）＝買",
+    phonicsNote:"買う的て形是「買って」，屬於促音便；和飲む（撥音便）、話す（直接加して）屬於不同組的變化規則，五段動詞的て形要依語尾分成三組規則來記，不是統一套用一種變化。" },
+  { jp:"会社", kana:"かいしゃ", romaji:"kaisha", zh:"公司", example:"父は大きい会社で働いています。", exampleZh:"爸爸在一間大公司工作。", pos:"名詞", emoji:"🏢",
+    image:"https://api.openverse.org/v1/images/fa3fa8e7-0326-47f2-ad4f-d10a39e6d10f/thumb/", credit:"ricardodiaz11", creditUrl:"https://www.flickr.com/photos/41652235@N00/4485128485",
+    kanjiBreakdown:"会（聚會、集合）+社（組織、團體）＝人聚集起來的組織＝公司",
+    phonicsNote:"「かい」是あ・い兩個音節分開唸，不是長音，要唸出兩拍；後面的「しゃ」則是拗音，し和や黏成一拍，兩種發音方式不要混用。" },
+  { jp:"図書館", kana:"としょかん", romaji:"toshokan", zh:"圖書館", example:"週末、図書館で勉強します。", exampleZh:"週末我會在圖書館讀書。", pos:"名詞", emoji:"📚",
+    image:"https://api.openverse.org/v1/images/94860785-5fb6-4558-ab85-38f6b43e0240/thumb/", credit:"esquetee", creditUrl:"https://www.flickr.com/photos/93307622@N00/14485400325",
+    kanjiBreakdown:"図（圖畫、圖書）+書（書籍）+館（建築物、場館）＝收藏圖書的場館＝圖書館",
+    phonicsNote:"五個假名と・しょ・か・ん，但「しょ」是拗音算一拍、「ん」是獨立一拍的撥音，整體只唸四拍，不是五拍，容易被外觀的假名數量誤導。" },
+  { jp:"部屋", kana:"へや", romaji:"heya", zh:"房間", example:"私の部屋は狭いです。", exampleZh:"我的房間很小。", pos:"名詞", emoji:"🚪",
+    image:"https://api.openverse.org/v1/images/971bd97b-d4a3-4f4e-b9d1-9d214ff7cbc6/thumb/", credit:"Paintzen", creditUrl:"https://www.flickr.com/photos/147489968@N06/29844388151",
+    kanjiBreakdown:"部（部分、區劃）+屋（房子、屋子）＝房子裡劃分出來的空間＝房間",
+    phonicsNote:"「へや」兩個音節平平地唸，這裡的へ是單獨假名發音he，不是文法助詞「へ」（方向助詞唸e），同一個假名在不同位置發音規則不同，要靠上下文判斷。" },
+  { jp:"財布", kana:"さいふ", romaji:"saifu", zh:"錢包", example:"財布を忘れました。", exampleZh:"我忘記帶錢包了。", pos:"名詞", emoji:"👛",
+    image:"https://api.openverse.org/v1/images/cbd007ab-1b8e-4c2e-8cdb-ee6b00201a8e/thumb/", credit:"Incase.", creditUrl:"https://www.flickr.com/photos/62021300@N00/11823322314",
+    kanjiBreakdown:"財（財物、金錢）+布（布、包裹的東西）＝裝錢的布袋＝錢包",
+    phonicsNote:"「さい」是あ・い兩個音節分開唸，不是長音，要唸出sa－i兩拍；ふ則是唇齒摩擦的音，發音時嘴唇接近但不完全閉合，和英文f的發音方式不同。" },
+  { jp:"一緒に", kana:"いっしょに", romaji:"issho ni", zh:"一起", example:"友達と一緒に映画を見ます。", exampleZh:"我和朋友一起看電影。", pos:"副詞", emoji:"🤝",
+    image:"https://api.openverse.org/v1/images/8bdc8461-c310-4a09-8b66-a49909c9e311/thumb/", credit:"Bob n Renee", creditUrl:"https://www.flickr.com/photos/33989573@N00/2369543057",
+    kanjiBreakdown:"一（一個）+緒（絲線、頭緒，引申為連在一起）＝合成一條線＝一起",
+    phonicsNote:"「いっしょ」中的っ是促音，發音要停頓一拍再送出しょ，唸成 i－（停頓）－sho 三拍；しょ本身是拗音算一拍，所以いっしょ整體是三拍，不是四拍。" }
+];
+
+function seedToWord(s, i){
+  return {
+    id: 'w'+Date.now()+i,
+    jp:s.jp, kana:s.kana||'', romaji:s.romaji||'', pos:s.pos||'', emoji:s.emoji||'',
+    image:s.image||'', credit:s.credit||'', creditUrl:s.creditUrl||'',
+    kanjiBreakdown:s.kanjiBreakdown||'', phonicsNote:s.phonicsNote||'',
+    meanings:[{zh:s.zh, example:s.example||'', exampleZh:s.exampleZh||''}],
+    box:1, nextReview: todayStr()
+  };
+}
+
+function primaryZh(w){ return (w.meanings && w.meanings[0]) ? w.meanings[0].zh : ''; }
+
+// 使用者自己輸入的單字內容在插入畫面前先跳脫，避免打到 < > 等符號時版面跑掉
+function esc(str){
+  if(str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function loadVocab(){
+  let v = JSON.parse(localStorage.getItem(LS_VOCAB) || 'null');
+  if(!v){
+    v = SEED.map(seedToWord);
+    saveVocab(v);
+  } else {
+    // 相容舊版資料：補上新版才有的漢字拆解／發音原理／例句翻譯欄位，不影響已累積的複習進度
+    let migrated = false;
+    const seedByJp = {};
+    SEED.forEach(s=>{ seedByJp[s.jp] = s; });
+    v.forEach(w=>{
+      if(!w.meanings){
+        w.meanings = [{ zh: w.zh || '', example: w.example || '', exampleZh:'' }];
+        delete w.zh; delete w.example;
+        migrated = true;
+      }
+      const seed = seedByJp[w.jp];
+      if(seed){
+        if(!w.kana && seed.kana){ w.kana = seed.kana; migrated = true; }
+        if(!w.romaji && seed.romaji){ w.romaji = seed.romaji; migrated = true; }
+        if(!w.kanjiBreakdown && seed.kanjiBreakdown){ w.kanjiBreakdown = seed.kanjiBreakdown; migrated = true; }
+        if(!w.phonicsNote && seed.phonicsNote){ w.phonicsNote = seed.phonicsNote; migrated = true; }
+        if(w.meanings[0] && !w.meanings[0].exampleZh && seed.exampleZh){
+          w.meanings[0].exampleZh = seed.exampleZh;
+          migrated = true;
+        }
+      }
+    });
+    if(migrated) saveVocab(v);
+  }
+  return v;
+}
+function saveVocab(v){ localStorage.setItem(LS_VOCAB, JSON.stringify(v)); }
+
+function loadLog(){ return JSON.parse(localStorage.getItem(LS_LOG) || '{}'); }
+function saveLog(l){ localStorage.setItem(LS_LOG, JSON.stringify(l)); }
+function markStudied(){
+  const l = loadLog();
+  l[todayStr()] = true;
+  saveLog(l);
+}
+
+function loadQuizHistory(){ return JSON.parse(localStorage.getItem(LS_QUIZ) || '[]'); }
+function saveQuizHistory(h){ localStorage.setItem(LS_QUIZ, JSON.stringify(h)); }
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function addDays(dateStr, days){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+days);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+let vocab = loadVocab();
+
+/* ---------- IDIOMS（獨立支線，不併入主單字庫） ---------- */
+const LS_IDIOMS = 'jl_idioms';
+const LS_IDIOM_QUIZ = 'jl_idiom_quiz';
+
+const IDIOMS = [
+  ["猫の手も借りたい","ねこのてもかりたい","非常忙碌、人手不足","猫の手も借りたいほど忙しいです。","🐱","忙到想跟貓借手來幫忙（形容非常忙碌）。"],
+  ["石の上にも三年","いしのうえにもさんねん","有志者事竟成、堅持就會成功","石の上にも三年、諦めないで続けましょう。","🪨","有志者事竟成，不要放棄，繼續努力吧。"],
+  ["猿も木から落ちる","さるもきからおちる","智者千慮必有一失","猿も木から落ちるから、彼のミスも仕方ないです。","🐒","智者千慮必有一失，他的失誤也是難免的。"],
+  ["七転び八起き","ななころびやおき","屢敗屢戰、永不放棄","七転び八起きの精神で頑張ります。","🔄","我會抱著屢敗屢戰的精神努力。"],
+  ["花より団子","はなよりだんご","重實用勝過虛榮、務實","彼は花より団子で、プレゼントよりお金がほしいそうです。","🍡","他很務實，比起禮物更想要現金。"],
+  ["一石二鳥","いっせきにちょう","一石二鳥、一舉兩得","運動しながら友達と話せて、一石二鳥です。","🐦","邊運動邊跟朋友聊天，一舉兩得。"],
+  ["口が滑る","くちがすべる","說溜嘴、不小心說出秘密","つい口が滑って、秘密を話してしまいました。","👄","我不小心說溜嘴，把秘密說出來了。"],
+  ["目が回る","めがまわる","忙得頭昏眼花","今週は仕事で目が回るほど忙しいです。","😵","這週工作忙得我頭昏眼花。"],
+  ["耳が痛い","みみがいたい","逆耳忠言、聽了刺耳但中肯","その意見は正しいですが、私には耳が痛いです。","👂","那個意見雖然正確，但對我來說很刺耳。"],
+  ["顔が広い","かおがひろい","人面很廣、交遊廣闊","田中さんは顔が広くて、色々な人を知っています。","😊","田中先生人面很廣，認識各式各樣的人。"],
+  ["腹が立つ","はらがたつ","生氣、發火","彼の態度に腹が立ちました。","😠","他的態度讓我很生氣。"],
+  ["手が足りない","てがたりない","人手不足","今、店は手が足りなくて大変です。","🙌","現在店裡人手不足，很辛苦。"],
+  ["頭が固い","あたまがかたい","頭腦僵化、固執","祖父は頭が固くて、新しい考えを受け入れません。","🗿","祖父很固執，不接受新的想法。"],
+  ["気が合う","きがあう","意氣相投、投緣","彼女とは初めて会った時から気が合いました。","🤝","我和她從第一次見面就很投緣。"],
+  ["水に流す","みずにながす","既往不咎、讓過去的事過去","昔のことは水に流しましょう。","💧","過去的事就讓它過去吧。"]
+];
+
+function seedIdiom(idm, i){
+  return {
+    id:'i'+Date.now()+i, jp:idm[0], kana:idm[1], romaji:'', pos:'慣用句', emoji:idm[4],
+    image:'', credit:'', creditUrl:'', kanjiBreakdown:'', phonicsNote:'',
+    meanings:[{zh:idm[2], example:idm[3], exampleZh:idm[5]||''}],
+    box:1, nextReview: todayStr()
+  };
+}
+
+function loadIdioms(){
+  let v = JSON.parse(localStorage.getItem(LS_IDIOMS) || 'null');
+  if(!v){
+    v = IDIOMS.map(seedIdiom);
+    saveIdioms(v);
+  } else {
+    let migrated = false;
+    const idiomByJp = {};
+    IDIOMS.forEach(idm=>{ idiomByJp[idm[0]] = idm; });
+    v.forEach(w=>{
+      const idm = idiomByJp[w.jp];
+      if(idm && w.meanings && w.meanings[0] && !w.meanings[0].exampleZh && idm[5]){
+        w.meanings[0].exampleZh = idm[5];
+        migrated = true;
+      }
+    });
+    if(migrated) saveIdioms(v);
+  }
+  return v;
+}
+function saveIdioms(v){ localStorage.setItem(LS_IDIOMS, JSON.stringify(v)); }
+
+let idioms = loadIdioms();
+
+/* ---------- TAB SWITCHING ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='grammar') renderGrammar();
+    if(btn.dataset.tab==='flash') renderFlash();
+    if(btn.dataset.tab==='quiz') renderQuiz();
+    if(btn.dataset.tab==='reading') renderReading();
+    if(btn.dataset.tab==='idioms') renderIdioms();
+    if(btn.dataset.tab==='progress') renderProgress();
+    if(btn.dataset.tab==='manage') renderManage();
+  });
+});
+
+/* ---------- SPEECH: pronunciation playback ---------- */
+const LS_VOICE = 'jl_voice';
+let cachedVoices = [];
+function loadVoices(){
+  cachedVoices = window.speechSynthesis.getVoices();
+  populateVoiceSelect();
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function japaneseVoices(){
+  // 只保留日文（ja-JP）語音，排除其他語言
+  return cachedVoices.filter(v => v.lang === 'ja-JP');
+}
+
+function populateVoiceSelect(){
+  const sel = document.getElementById('voice-select');
+  if(!sel) return;
+  const list = japaneseVoices();
+  if(list.length === 0){
+    sel.innerHTML = `<option>找不到日文語音，請到系統設定安裝</option>`;
+    return;
+  }
+  const saved = localStorage.getItem(LS_VOICE);
+  sel.innerHTML = list.map(v => `<option value="${v.name}">${v.name}（${v.lang}）</option>`).join('');
+  if(saved && list.some(v=>v.name===saved)){
+    sel.value = saved;
+  } else {
+    const v = pickJapaneseVoice();
+    if(v) sel.value = v.name;
+  }
+}
+
+function pickJapaneseVoice(){
+  const saved = localStorage.getItem(LS_VOICE);
+  if(saved){
+    const v = cachedVoices.find(v => v.name === saved);
+    if(v) return v;
+  }
+  // 優先挑「加強版／進階版」的日文語音，音質最自然道地
+  const enhanced = cachedVoices.find(v => v.lang === 'ja-JP' && /Enhanced|Premium/i.test(v.name));
+  if(enhanced) return enhanced;
+  const preferredNames = ['Kyoko','Otoya','O-ren','Hattori','Google 日本語'];
+  for(const name of preferredNames){
+    const v = cachedVoices.find(v => v.name === name && v.lang === 'ja-JP');
+    if(v) return v;
+  }
+  const jaJP = cachedVoices.find(v => v.lang === 'ja-JP');
+  if(jaJP) return jaJP;
+  const jaAny = cachedVoices.find(v => v.lang && v.lang.startsWith('ja'));
+  if(jaAny) return jaAny;
+  return null;
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)){
+    alert('你的瀏覽器不支援語音播放功能，建議改用 Chrome 或 Safari 最新版。');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP';
+  u.rate = 0.85;
+  const voice = pickJapaneseVoice();
+  if(voice) u.voice = voice;
+  window.speechSynthesis.speak(u);
+}
+
+/* ---------- SPEECH: pronunciation check ---------- */
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function normalizeJp(s){
+  return String(s||'').trim().replace(/[\s。、！？.,!?]/g,'');
+}
+
+function checkPronunciation(word, micBtnId, resultBoxId){
+  if(!SpeechRecognitionCtor){
+    alert('你的瀏覽器不支援發音偵測功能，建議改用電腦版 Chrome 瀏覽器來使用這個功能。若使用 file:// 直接開啟本機檔案，Chrome 可能會限制此功能，建議改用網頁伺服器方式開啟。');
+    return;
+  }
+  const micBtn = document.getElementById(micBtnId);
+  const resultBox = document.getElementById(resultBoxId);
+  if(micBtn.classList.contains('listening')) return; // 防止還在錄音時被連續點擊
+  const recognition = new SpeechRecognitionCtor();
+  recognition.lang = 'ja-JP';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 3;
+
+  micBtn.classList.add('listening');
+  resultBox.innerHTML = '';
+
+  const targets = [normalizeJp(word.jp), normalizeJp(word.kana)].filter(Boolean);
+
+  recognition.onresult = (event)=>{
+    const alternatives = Array.from(event.results[0]).map(r=>normalizeJp(r.transcript));
+    const matched = alternatives.some(a => targets.includes(a));
+    const shown = Array.from(event.results[0])[0].transcript.trim();
+    resultBox.innerHTML = matched
+      ? `<div class="pron-result ok">✅ 發音正確！（辨識結果：${esc(shown)}）</div>`
+      : `<div class="pron-result bad">🔁 再試一次！（辨識結果：${esc(shown) || '（沒聽清楚）'}）</div>`;
+  };
+  recognition.onerror = ()=>{
+    resultBox.innerHTML = `<div class="pron-result bad">沒有偵測到聲音，請確認麥克風權限後再試一次</div>`;
+  };
+  recognition.onend = ()=>{
+    micBtn.classList.remove('listening');
+  };
+  recognition.start();
+}
+
+/* ---------- 通用單字卡牌組控制器（主單字庫 / 慣用句支線共用） ---------- */
+function makeFlashDeck({ getData, saveData, areaId, prefix }){
+  let queue = [], idx = 0, flipped = false;
+
+  function render(){
+    const today = todayStr();
+    queue = getData().filter(w => w.nextReview <= today);
+    idx = 0;
+    flipped = false;
+    const area = document.getElementById(areaId);
+    if(queue.length === 0){
+      area.innerHTML = `<div class="card empty-msg">🎉 這裡今天要複習的都完成了！</div>`;
+      return;
+    }
+    draw();
+  }
+
+  function draw(){
+    const area = document.getElementById(areaId);
+    if(idx >= queue.length){
+      area.innerHTML = `<div class="card empty-msg">✅ 這一輪複習完成了！（共 ${queue.length} 張）</div>`;
+      return;
+    }
+    const w = queue[idx];
+    const P = prefix;
+    area.innerHTML = `
+      <div class="sub" style="display:flex;align-items:center;justify-content:center;gap:10px;">
+        <button class="icon-btn" id="${P}-prev-btn" aria-label="上一張" title="上一張" style="width:28px;height:28px;font-size:0.85rem;${idx===0?'visibility:hidden;':''}">◀</button>
+        <span>進度：${idx+1} / ${queue.length}</span>
+      </div>
+      <div class="flashcard" id="${P}-fc" role="button" tabindex="0" aria-label="點擊翻卡查看意思">
+        ${w.image ?
+          `<img class="word-img" src="${w.image}" alt="${esc(w.jp)}" onerror="this.outerHTML='<div class=word-emoji aria-hidden=true>${w.emoji||'🖼️'}</div>'">`
+          : (w.emoji ? `<div class="word-emoji" aria-hidden="true">${w.emoji}</div>` : '')}
+        ${w.image && w.credit ? `<div class="credit">照片：${w.creditUrl ? `<a href="${esc(w.creditUrl)}" target="_blank" rel="noopener noreferrer" style="color:inherit;" onclick="event.stopPropagation()">${esc(w.credit)}</a>` : esc(w.credit)}（CC 授權）</div>` : ''}
+        <div class="term" lang="ja">${esc(w.jp)}<button class="icon-btn" id="${P}-speak-btn" aria-label="播放發音" title="播放發音">🔊</button></div>
+        ${(w.kana || w.romaji) ? `<div class="reading-row">${[w.kana, w.romaji].filter(Boolean).map(esc).join('　')}</div>` : ''}
+        ${flipped ? `
+          ${w.pos ? `<div class="pos-tag">${esc(w.pos)}</div>` : ''}
+          ${w.meanings.map((m,i)=>`
+            <div class="meaning">${w.meanings.length>1 ? (i+1)+'. ' : ''}${esc(m.zh)}</div>
+            ${m.example ? `<div class="example" lang="ja">${esc(m.example)}</div>` : ''}
+            ${m.exampleZh ? `<div class="example-zh">${esc(m.exampleZh)}</div>` : ''}
+          `).join('')}
+          ${w.kanjiBreakdown ? `<div class="note-box">🈁 ${esc(w.kanjiBreakdown)}</div>` : ''}
+          ${w.phonicsNote ? `<div class="note-box">🔤 ${esc(w.phonicsNote)}</div>` : ''}
+        ` : `<div class="hint">點卡片查看中文意思</div>`}
+        ${flipped ? `
+          <button class="icon-btn" id="${P}-mic-btn" aria-label="測試我的發音" title="測試我的發音" style="margin-top:14px;">🎤</button>
+          <div id="${P}-pron-result-box" aria-live="polite"></div>
+        ` : ''}
+      </div>
+      ${flipped ? `
+        <div class="btn-row">
+          <button class="action btn-unknow" id="${P}-btn-unknow">😵 不熟</button>
+          <button class="action btn-know" id="${P}-btn-know">✅ 認識</button>
+        </div>
+      ` : ''}
+    `;
+    const fcEl = document.getElementById(`${P}-fc`);
+    const flip = ()=>{ flipped = !flipped; draw(); };
+    fcEl.addEventListener('click', flip);
+    fcEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); flip(); } });
+    document.getElementById(`${P}-speak-btn`).addEventListener('click', (e)=>{
+      e.stopPropagation();
+      speak(w.jp);
+    });
+    if(idx>0){
+      document.getElementById(`${P}-prev-btn`).addEventListener('click', (e)=>{
+        e.stopPropagation();
+        idx--;
+        flipped = false;
+        draw();
+      });
+    }
+    if(flipped){
+      document.getElementById(`${P}-mic-btn`).addEventListener('click', (e)=>{
+        e.stopPropagation();
+        checkPronunciation(w, `${P}-mic-btn`, `${P}-pron-result-box`);
+      });
+      document.getElementById(`${P}-btn-know`).addEventListener('click', (e)=>{ e.stopPropagation(); review(w, true); });
+      document.getElementById(`${P}-btn-unknow`).addEventListener('click', (e)=>{ e.stopPropagation(); review(w, false); });
+    }
+  }
+
+  function review(w, knew){
+    const today = todayStr();
+    if(knew){
+      w.box = Math.min(5, w.box+1);
+      w.nextReview = addDays(today, BOX_INTERVAL_DAYS[w.box]);
+    } else {
+      w.box = 1;
+      w.nextReview = today;
+      // 不熟的字排到這一輪稍後的位置再考一次，當場加強記憶
+      const alreadyQueuedAgain = queue.slice(idx+1).includes(w);
+      if(!alreadyQueuedAgain){
+        const insertAt = Math.min(idx + 4, queue.length);
+        queue.splice(insertAt, 0, w);
+      }
+    }
+    saveData(getData());
+    markStudied();
+    idx++;
+    flipped = false;
+    draw();
+  }
+
+  return { render };
+}
+
+/* ---------- 通用小測驗控制器（主單字庫 / 慣用句支線共用） ---------- */
+function makeQuizController({ getData, areaId, historyKey }){
+  let state = null;
+
+  function render(){
+    const area = document.getElementById(areaId);
+    const data = getData();
+    if(data.length < 4){
+      area.innerHTML = `<div class="empty-msg">項目至少要有 4 個才能出小測驗，先去新增一些吧！</div>`;
+      return;
+    }
+    state = { qIndex:0, correct:0, questions: build(data) };
+    draw();
+  }
+
+  function build(data){
+    const pool = [...data].sort(()=>Math.random()-0.5).slice(0, Math.min(10, data.length));
+    return pool.map(w=>{
+      const distractors = data.filter(x=>x.id!==w.id).sort(()=>Math.random()-0.5).slice(0,3).map(x=>primaryZh(x));
+      const answer = primaryZh(w);
+      const options = [...distractors, answer].sort(()=>Math.random()-0.5);
+      return { word:w, options, answer };
+    });
+  }
+
+  function draw(){
+    const area = document.getElementById(areaId);
+    if(state.qIndex >= state.questions.length){
+      const score = state.correct;
+      const total = state.questions.length;
+      if(historyKey){
+        const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        history.unshift({date: todayStr(), score, total});
+        localStorage.setItem(historyKey, JSON.stringify(history.slice(0,50)));
+      }
+      markStudied();
+      area.innerHTML = `
+        <div class="empty-msg">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--ink);">測驗完成！</div>
+          <div style="font-size:2rem;color:var(--accent);margin:10px 0;">${score} / ${total}</div>
+          <button class="action btn-primary" id="retry-${areaId}">再測一次</button>
+        </div>`;
+      document.getElementById(`retry-${areaId}`).addEventListener('click', render);
+      return;
+    }
+    const q = state.questions[state.qIndex];
+    area.innerHTML = `
+      <div class="sub">題目 ${state.qIndex+1} / ${state.questions.length}　・　目前得分 ${state.correct}</div>
+      <div class="quiz-q" lang="ja">${esc(q.word.jp)} 的意思是？</div>
+      <div id="opts-${areaId}"></div>
+    `;
+    const optsEl = document.getElementById(`opts-${areaId}`);
+    q.options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className = 'quiz-opt';
+      b.textContent = opt;
+      b.addEventListener('click', ()=>{
+        document.querySelectorAll(`#opts-${areaId} .quiz-opt`).forEach(bb=>{
+          bb.disabled = true;
+          if(bb.textContent === q.answer) bb.textContent = '✓ ' + bb.textContent, bb.classList.add('correct');
+          else if(bb.textContent === opt) bb.textContent = '✕ ' + bb.textContent, bb.classList.add('wrong');
+        });
+        if(opt === q.answer) state.correct++;
+        setTimeout(()=>{ state.qIndex++; draw(); }, 700);
+      });
+      optsEl.appendChild(b);
+    });
+  }
+
+  return { render };
+}
+
+/* ---------- 主單字庫 / 慣用句支線 各自的牌組與測驗 ---------- */
+const vocabDeck = makeFlashDeck({ getData:()=>vocab, saveData:saveVocab, areaId:'flash-area', prefix:'v' });
+const vocabQuiz = makeQuizController({ getData:()=>vocab, areaId:'quiz-area', historyKey:LS_QUIZ });
+
+const idiomDeck = makeFlashDeck({ getData:()=>idioms, saveData:saveIdioms, areaId:'idiom-flash-area', prefix:'idm' });
+const idiomQuiz = makeQuizController({ getData:()=>idioms, areaId:'idiom-quiz-area', historyKey:LS_IDIOM_QUIZ });
+
+function renderFlash(){ vocabDeck.render(); }
+function renderQuiz(){ vocabQuiz.render(); }
+
+function renderIdioms(){
+  const isFlash = document.querySelector('.idiom-subtab.active').dataset.idiomTab === 'flash';
+  if(isFlash) idiomDeck.render(); else idiomQuiz.render();
+}
+
+document.querySelectorAll('.idiom-subtab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.idiom-subtab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const isFlash = btn.dataset.idiomTab === 'flash';
+    document.getElementById('idiom-flash-area').style.display = isFlash ? '' : 'none';
+    document.getElementById('idiom-quiz-area').style.display = isFlash ? 'none' : '';
+    renderIdioms();
+  });
+});
+
+/* ---------- GRAMMAR LOGIC（書本式，預設首頁） ---------- */
+const LS_GRAMMAR = 'jl_grammar';
+
+const GRAMMAR = [
+  { id:'g1', title:'為什麼日文的語序是 SOV？助詞才是真正的主角',
+    paras:[
+      "中文和英文主要靠<b>語序</b>來判斷「誰對誰做了什麼」，但日文不一樣——日文幾乎每個名詞後面都會黏一個<b>助詞</b>，用來標明這個名詞在句子裡扮演的角色，所以語序反而可以很有彈性。",
+      "基本語序是<b>主語＋受詞＋動詞（S-O-V）</b>，但真正決定「誰是主語、誰是受詞」的不是位置，是助詞。例如 <em>「犬が男を噛む。」</em>（狗咬男人）和 <em>「男を犬が噛む。」</em>——兩句字詞順序不同，意思卻完全一樣，因為が永遠標記主語、を永遠標記受詞，不管它們站在句子的哪個位置。",
+      "對照英文：<em>\"Dog bites man.\"</em> 和 <em>\"Man bites dog.\"</em> 意思完全相反，因為英文靠語序判斷角色；日文靠助詞判斷角色，所以語序被「解放」了，可以依照想強調的重點自由調動順序。",
+      "唯一幾乎固定不變的規則是：<b>動詞永遠放在句尾</b>。因為動詞是整句話的「結論」，前面所有帶著助詞的名詞都只是在為這個結論鋪陳細節，順序可以依重要性、語感自由排列，但結論一定最後才揭曉。",
+      "邏輯總結：日文語序不是隨便的，而是把「判斷角色」的工作交給了助詞，把「排列順序」的自由留給了說話者——這也是為什麼下一章要專門講は和が，因為助詞系統才是日文文法真正的骨架。"
+    ],
+    quiz:[
+      { q:'「男を犬が噛む。」和「犬が男を噛む。」意思有什麼不同？', options:['意思完全相反','意思相同，因為助詞決定角色，不是位置','後者文法有錯'], answer:1 },
+      { q:'日文語序中，幾乎唯一固定不變的規則是？', options:['主語一定在最前面','動詞一定放在句尾','受詞一定緊接在主語後面'], answer:1 }
+    ] },
+  { id:'g2', title:'は 和 が：「主題」和「主語」的邏輯差異',
+    paras:[
+      "這是台灣學生學日文最頭痛的地方，其實可以先分清楚兩個不同的問題：<b>は</b> 回答的是「我們現在在講誰／什麼」（主題），<b>が</b> 回答的是「誰／什麼具體符合這個描述」（真正的文法主語，或新資訊）。",
+      "經典例句 <em>「象は鼻が長い。」</em>（大象的鼻子很長）：は 先把話題定在「大象」上，が 才是後面「長い」這個描述真正指向的對象——鼻子。整句話在說「關於大象這個主題，鼻子這個部分是長的」。",
+      "新資訊 vs 已知資訊：が 常用來介紹「第一次出現、還不知道是誰」的對象，は 則用在「已經知道、要繼續討論下去」的話題上，這跟英文冠詞 a／the 的邏輯很像——第一次出現用 a（が），之後變成雙方都知道的東西就用 the（は）。例如 <em>「昔々、おじいさんが住んでいました。おじいさんは畑に行きました。」</em>——第一句 おじいさん 是新登場的角色用が，第二句同一個人已經是話題了改用は。",
+      "情境對比：<em>「これはペンです。」</em>（單純介紹：這是筆）vs <em>「これがペンです。」</em>（在好幾個東西裡指出：這個才是你要找的筆）——が 帶有「就是這一個、不是別的」的指定語感，は 只是平鋪直敘地介紹話題。",
+      "邏輯總結：問自己「我是在提出一個新話題」還是「我是在指定一個具體對象、回答『誰？』這個問題」，前者用は，後者用が，這比死背文法規則更接近日文母語者真正的判斷方式。"
+    ],
+    quiz:[
+      { q:'「昔々、おじいさん___住んでいました。」（角色第一次登場，屬於新資訊）空格該填？', options:['は','が'], answer:1 },
+      { q:'「象は鼻が長い。」中，は 和 が 各自的功能是？', options:['は 標示主題「大象」，が 標示描述句裡真正指向的對象「鼻子」','兩者意思相同，可以自由互換','は 和 が 都是用來標示受詞'], answer:0 }
+    ] },
+  { id:'g3', title:'を・に・で・へ：從「動作對象」到「空間邏輯」的助詞系統',
+    paras:[
+      "這四個助詞常被當成要死背的規則，其實背後有清楚的邏輯，各自負責不同的角色。",
+      "<b>を</b>：標記動作直接作用的<b>對象（受詞）</b>。<em>「本を読む。」</em>（讀書）——書是「讀」這個動作直接施加的對象。",
+      "<b>に</b>：標記一個<b>點</b>——可能是「目的地」（<em>「学校に行く。」</em>去學校這個終點）、「時間點」（<em>「三時に会う。」</em>三點這個時刻）、或「存在的位置點」（<em>「机の上にある。」</em>在桌上這個點存在）。",
+      "<b>で</b>：標記動作發生的<b>場域／範圍</b>，或使用的<b>方式／工具</b>。<em>「図書館で勉強する。」</em>（在圖書館這個場域讀書）、<em>「電車で行く。」</em>（用電車這個方式去）。",
+      "<b>へ</b>：標記<b>方向</b>，語感比に更柔和，強調「朝著那個方向」而不是「精確抵達那一點」。<em>「学校へ行く。」</em>和 <em>「学校に行く。」</em>意思很接近，但へ更強調「朝學校的方向前進」，に更強調「抵達學校這個確切的點」。",
+      "邏輯總結：を是「被動作到的對象」，に是「一個點（時間／地點／目的地）」，で是「動作發生的場域或使用的方式」，へ是「方向的箭頭」——這呼應第一章的邏輯：助詞才是決定每個名詞角色的關鍵，不是它站在句子的哪個位置。"
+    ],
+    quiz:[
+      { q:'「図書館___勉強する。」（在圖書館這個場域做動作）空格該填？', options:['に','で','へ'], answer:1 },
+      { q:'に 和 で 的核心差異是？', options:['に 是存在／抵達的那一個點，で 是動作發生的場域或範圍','兩者意思完全相同，可以互換','に 只能用在表示時間'], answer:0 }
+    ] },
+  { id:'g4', title:'ます形・て形・た形：不是死背表格，是「禮貌程度」加「功能」的組合',
+    paras:[
+      "很多學習者把動詞變化當成一長串要硬背的表格，其實可以拆成兩個獨立的維度來理解：<b>禮貌程度</b>（普通體／丁寧體）和<b>功能</b>（連接、完成、習慣）。",
+      "維度一：<b>禮貌程度</b>。<em>「食べる。」</em>（普通體，對朋友、家人用）和 <em>「食べます。」</em>（丁寧體，ます形，對外人、正式場合用）意思完全一樣，差別只在對話對象和場合的正式程度，不是不同的動詞。",
+      "維度二：<b>て形的功能</b>。て形本身不是時態，而是一個「連接的接點」——它可以把好幾個動作串成一串（<em>「起きて、顔を洗って、朝ごはんを食べる。」</em>起床、洗臉、吃早餐），也可以接上其他文法變成新的意思，例如 ている（正在做）、てもいい（可以做）、てはいけない（不可以做）——て形就像一個萬用插座，接上不同的字會產生不同的語感。",
+      "維度三：<b>た形</b>把動作錨定在「已經完成」的時間點上。<em>「食べた。」</em>（吃過了）明確指向過去已完成的動作，跟て形單純用來連接動作不同。",
+      "邏輯總結：與其把ます形、て形、た形當成三張獨立要背的表格，不如把它們想成「禮貌軸」（普通體↔丁寧體）和「功能軸」（辭書形＝原形習慣、て形＝連接接點、た形＝完成過去）交叉出來的組合——同一個動作套用不同組合，就會表達出不同語感，理解這個交叉關係，比死背變化表更容易舉一反三。"
+    ],
+    quiz:[
+      { q:'て形最核心的功能是什麼？', options:['單純表示過去式','把動作或句子「連接」起來，也是多種文法組合的接點','只能用在打招呼的場合'], answer:1 },
+      { q:'「食べます。」和「食べる。」意思一樣嗎？差別是？', options:['意思不同，ます形是完全不同的動詞','意思相同，差別只在禮貌程度（丁寧體 vs 普通體）','食べる是過去式，食べます是現在式'], answer:1 }
+    ] },
+  { id:'g5', title:'い形容詞 和 な形容詞：為什麼日文形容詞要分成兩種',
+    paras:[
+      "日文形容詞分成兩類，差別不在意思，而在<b>能不能自己變化語尾</b>：い形容詞可以自己變化（像動詞一樣有自己的活用），な形容詞則要靠な或です來連接，性質更接近名詞。",
+      "<b>い形容詞</b>：字尾是い，可以直接變化表達否定、過去等：<em>「高い」→「高くない」（不貴）→「高かった」（以前很貴）</em>，接名詞時也可以直接放在前面：<em>「高い山」</em>（高山），不需要多加任何字。",
+      "<b>な形容詞</b>：修飾名詞時中間要加な：<em>「静かな部屋」</em>（安靜的房間），不能說「静か部屋」；但當謂語（放在句尾）時不需要な，改用です：<em>「部屋は静かです。」</em>",
+      "常見的陷阱：<em>「きれい」（漂亮）</em>和<em>「有名」（有名）</em>雖然結尾聽起來像い，但它們其實是な形容詞（<em>「きれいな人」</em>、<em>「有名な人」</em>），因為分類的依據是<b>歷史來源和變化規則</b>，不是單看結尾聽起來像不像い，這點只能個別記住，不能單靠發音猜。",
+      "判斷技巧：試著把形容詞直接接在名詞前面——如果不需要加な就能接（高い山），是い形容詞；如果需要加な才能接（静かな部屋），是な形容詞。掌握這個變化規則的差異，比死背「哪些字是な形容詞」的清單更有效率。"
+    ],
+    quiz:[
+      { q:'「___部屋」（安靜的房間）空格該填？', options:['静か','静かな','静かい'], answer:1 },
+      { q:'為什麼「きれい」雖然結尾發音像い，卻是な形容詞？', options:['分類依據是歷史來源和變化規則，不是單看結尾發音','因為きれい沒有實際意思','日文形容詞其實沒有分類'], answer:0 }
+    ] },
+  { id:'g6', title:'敬語系統的邏輯：尊敬語・謙譲語・丁寧語都在講「誰的動作」',
+    paras:[
+      "敬語常被誤解成「越禮貌的說法就越正式」，其實真正的邏輯是在標示<b>「這個動作是誰做的、相對於誰」</b>，而不是單純的禮貌程度高低。",
+      "<b>尊敬語</b>：把<b>對方（或第三者，通常是地位較高的人）</b>的動作抬高，表達敬意。<em>「先生が来られます。」</em>（老師要來了）——用尊敬語形式抬高老師這個動作。",
+      "<b>謙譲語</b>：把<b>自己</b>的動作放低，透過謙虛自己來間接表達對聽者的敬意。<em>「私が参ります。」</em>（我會過去）——参ります是「行く」的謙讓語，刻意放低自己的動作。",
+      "<b>丁寧語</b>：就是です／ます這種基礎的禮貌語尾，不管動作是誰做的都可以加，它只負責表面的語氣禮貌，不涉及「抬高對方」或「放低自己」這種方向性。",
+      "邏輯總結：判斷該用哪種敬語時，真正該問的問題不是「這句話該多正式」，而是<b>「這個動作是誰的、我現在是要抬高對方，還是放低自己」</b>——對方的動作用尊敬語抬高，自己的動作用謙讓語放低，兩者都可以再疊加丁寧語的です／ます表面禮貌。這也呼應了第二章は／が的邏輯：日文文法常常在問「誰」和「相對關係」，而不是死板的規則。"
+    ],
+    quiz:[
+      { q:'「先生が来られます。」和「私が参ります。」，哪一句用的是「謙譲語」（放低自己的動作）？', options:['先生が来られます。','私が参ります。'], answer:1 },
+      { q:'敬語系統真正在區分的核心邏輯是什麼？', options:['這個動作是誰的、該抬高對方還是放低自己','只是單純禮貌程度的高低','敬語只能用在非常正式的場合'], answer:0 }
+    ] },
+  { id:'g7', title:'あげる・くれる・もらう：動作的「方向性」邏輯',
+    paras:[
+      "這三個「授受動詞」常被直接翻成「給」和「拿」，但真正的邏輯是在標記<b>這個動作的方向</b>，以及<b>說話者站在哪一邊看這件事</b>。",
+      "<b>あげる</b>：方向是「從我方（或內圈）出發，給向對方（或外圈）」。<em>「私は友達に本をあげた。」</em>（我給了朋友一本書）——動作的箭頭從「我」出發，指向「朋友」。",
+      "<b>くれる</b>：方向是「從對方過來，給向我方（或我的內圈）」。<em>「友達が私に本をくれた。」</em>（朋友給了我一本書）——同樣是「給」的動作，但因為方向是<b>朝向我這邊</b>，必須用くれる而不是あげる，這是很多學習者會搞混的地方。",
+      "<b>もらう</b>：焦點放在<b>接收的一方</b>，強調「我從誰那裡得到了什麼」，不管實際的給予方向如何。<em>「私は友達に本をもらった。」</em>（我從朋友那裡得到了一本書）——立場是接收者「我」。",
+      "邏輯總結：判斷該用哪個字，先問<b>「這個動作的箭頭方向，是朝向我這邊，還是離開我這邊」</b>——朝我這邊來用くれる，離開我這邊出去用あげる，強調「我收到了什麼」則用もらう。這是純粹的方向邏輯，不是單純把「給」和「拿」字面翻譯過來就能理解的。"
+    ],
+    quiz:[
+      { q:'「友達が私に本を___。」（朋友給我書，方向朝向我）空格該填？', options:['あげた','くれた','もらった'], answer:1 },
+      { q:'判斷該用 あげる 還是 くれる，關鍵是什麼？', options:['動作箭頭的方向是朝向我這邊，還是離開我這邊','誰的年紀比較大','東西的價值高低'], answer:0 }
+    ] },
+  { id:'g8', title:'可能形・使役形・受身形：主詞和動作之間「角色轉換」的邏輯',
+    paras:[
+      "這三種動詞變化都在回答同一類問題：<b>主語跟這個動作之間是什麼關係</b>——能不能做、讓誰做、還是被誰做。",
+      "<b>可能形</b>：五段動詞把語尾改成え段音再加る（<em>「飲む」→「飲める」</em>），一段動詞去掉る加られる（<em>「食べる」→「食べられる」</em>）——表示「有能力／有可能做這件事」，主語從單純的「動作者」變成「有能力做這件事的人」。",
+      "<b>使役形</b>：五段動詞改成あ段音加せる（<em>「飲む」→「飲ませる」</em>），一段動詞去掉る加させる（<em>「食べる」→「食べさせる」</em>）——表示「讓／使某人做」，主語從「動作者」變成「促使別人做這個動作的人」。",
+      "<b>受身形</b>：五段動詞改成あ段音加れる（<em>「飲む」→「飲まれる」</em>），一段動詞去掉る加られる（<em>「食べる」→「食べられる」</em>）——表示「被動接受這個動作」，主語從「動作者」變成「承受這個動作的人」。",
+      "邏輯總結：與其死背三張變化表，不如記住三種變化都在回答「主語跟動作是什麼角色關係」——能不能做（可能）、讓誰做（使役）、被誰做（受身）。這也呼應了第七章あげる／くれる／もらう的方向性邏輯：日文文法很常在問「誰對誰做了什麼、扮演什麼角色」，掌握這個提問方式，比死記變化規則更容易舉一反三。"
+    ],
+    quiz:[
+      { q:'「食べる」的可能形是？', options:['食べさせる（使役形）','食べられる（可能形）','食べらせる'], answer:1 },
+      { q:'可能形、使役形、受身形三者共同在回答什麼問題？', options:['主語跟這個動作是什麼關係（能做／讓做／被做）','動作發生在什麼時間','動作有多禮貌'], answer:0 }
+    ] },
+  { id:'g9', title:'と・ば・たら・なら：條件句四種的使用情境邏輯',
+    paras:[
+      "日文有四種條件表現，比英文單純的 if 複雜得多，因為它們各自標記著不同的<b>邏輯關係</b>，不是隨便選一個都能通用。",
+      "<b>と</b>：表示「一定會發生的必然結果」，常用在自然現象、機械操作、習慣性動作。<em>「春になると、花が咲く。」</em>（一到春天，花就會開）——這是自然規律，不是假設，前項成立後項就必然發生。",
+      "<b>ば</b>：強調<b>條件本身</b>，前項是後項成立的必要條件，語氣比較書面、邏輯性強。<em>「お金があれば、旅行に行きたい。」</em>（如果有錢的話，想去旅行）——重點在「有錢」這個條件是否成立。",
+      "<b>たら</b>：最口語、最萬用，強調<b>動作完成之後</b>的時間先後順序，前項發生「之後」才輪到後項。<em>「家に帰ったら、シャワーを浴びます。」</em>（回家之後，就去洗澡）——重點是先後順序，不是條件關係。",
+      "<b>なら</b>：針對<b>對方剛才提到的話題或前提</b>做出回應或建議，不是描述客觀條件，而是「聽了你說的話之後」的反應。<em>「東京に行くなら、この店がおすすめです。」</em>（如果你要去東京的話，推薦這家店）——是針對「你要去東京」這個話題給出的建議。",
+      "邏輯總結：と＝必然規律、ば＝條件本身、たら＝時間先後、なら＝針對話題回應——四種背後其實是在標記「前後兩件事的關係有多緊密、多必然、時間先後如何」，選對哪一種，比全部硬翻成中文的「如果」更能表達真正的語氣。"
+    ],
+    quiz:[
+      { q:'「春になる___、花が咲く。」（自然規律，一定會發生）空格該填？', options:['と','たら','なら'], answer:0 },
+      { q:'なら 和其他三種條件句最大的不同是什麼？', options:['なら 是針對對方剛提到的話題做回應建議，不是單純描述客觀條件','なら 只能用在過去式','なら 和 と 意思完全相同，可以互換'], answer:0 }
+    ] },
+  { id:'g10', title:'漢字部首的邏輯：看部首猜懂生字的意思方向',
+    paras:[
+      "很多漢字是由<b>部首（表意的部分）</b>加上其他組成的，部首常常在暗示這個字所屬的<b>意義類別</b>，這個邏輯其實跟英文的字首字尾很像——都是先掌握一個「規律的線索」，再推理出生字的大概意思，不用馬上查字典。",
+      "<b>氵（さんずい）</b>：通常和<b>水</b>有關。例如 海（海洋）、川（河川）、泳（游泳）、洗（清洗）——只要看到氵，大概就能猜到這個字跟水、液體的動作有關。",
+      "<b>木（きへん）</b>：通常和<b>樹木、木材</b>有關。例如 林（樹林）、森（森林）、桜（櫻花樹）、机（書桌，木製家具）。",
+      "<b>亻（にんべん）</b>：通常和<b>人</b>的動作或狀態有關。例如 休（休息）、体（身體）、住（居住）、働（工作）。",
+      "邏輯示範：看到生字「洗」，拆解成 氵（水）＋先（發音提示接近せん），就能推理出「跟水有關的動作」＝清洗，不用查字典就能猜到大概方向。這個技巧在閱讀時特別有用：遇到生字先別急著查，試著拆解部首，通常就能推理出意思的大方向。"
+    ],
+    quiz:[
+      { q:'「氵」（さんずい）部首通常和什麼意思有關？', options:['水','樹木','人'], answer:0 },
+      { q:'看到生字時，拆解漢字部首的好處是什麼？', options:['可以確定正確的讀音','可以推理出大概的意思方向，不用馬上查字典','部首和意思完全無關，只是裝飾'], answer:1 }
+    ] },
+  { id:'g11', title:'助数詞的邏輯：為什麼「本」「枚」「匹」數的東西不一樣',
+    paras:[
+      "中文也有量詞（一「隻」貓、一「本」書），所以這個概念對中文母語者其實不陌生，但日文的助数詞系統更細，邏輯是依照<b>物品的形狀或類別</b>來分類，不是隨機規定。",
+      "<b>本（ほん）</b>：數<b>細長圓柱狀</b>的東西，例如鉛筆、瓶子、電影、繩子。<em>「鉛筆一本」</em>、<em>「映画一本」</em>。",
+      "<b>枚（まい）</b>：數<b>薄而扁平</b>的東西，例如紙張、盤子、T恤、票券。<em>「紙一枚」</em>、<em>「CD一枚」</em>。",
+      "<b>匹（ひき）</b>：數<b>中小型動物</b>，例如貓、狗、魚、蟲。<em>「猫一匹」</em>；而<b>頭（とう）</b>則用來數<b>大型動物</b>，例如牛、馬、象。<em>「牛一頭」</em>——動物依體型大小換用不同的助数詞。",
+      "邏輯總結：助数詞的選擇依據是「這個東西的形狀或類別是什麼」——先問這是細長的、扁平的、還是動物，再選對應的助数詞，這比硬背「每個名詞要配哪個字」的清單更有效率，也更容易套用到新出現的物品上。"
+    ],
+    quiz:[
+      { q:'數鉛筆（細長圓柱狀的東西）該用哪個助数詞？', options:['枚','本','匹'], answer:1 },
+      { q:'助数詞選擇的邏輯依據是什麼？', options:['完全隨機，沒有規律','東西的形狀或類別（細長／扁平／動物等）','東西的價格高低'], answer:1 }
+    ] },
+  { id:'g12', title:'擬音語・擬態語的邏輯：日文為什麼有這麼多「狀聲詞」',
+    paras:[
+      "日文有一套龐大的擬音語・擬態語系統，遠遠不只是漫畫裡的音效，日常對話和書寫中大量使用，是用來精準描繪「怎麼發生」的重要工具，不是幼稚或非正式的用語。",
+      "<b>擬音語</b>：模仿<b>實際存在的聲音</b>。例如 ワンワン（狗叫聲）、ザーザー（大雨聲）。",
+      "<b>擬態語</b>：本身<b>沒有實際聲音</b>，但用聲音的節奏感來描繪狀態或動作方式。例如 にこにこ（笑咪咪的樣子）、ゆっくり（慢慢地）、ばらばら（散亂的樣子）。",
+      "結構上的規律：很多擬音語・擬態語是<b>疊字結構</b>（兩音節重複一次），這種重複本身就在模擬「持續、反覆發生」的節奏感。例如 どきどき（心跳撲通撲通，緊張感持續）、わくわく（興奮期待持續）——重複的結構暗示這個狀態不是一瞬間，而是持續在發生。",
+      "邏輯總結：擬音語・擬態語不是隨便湊出來的可愛用語，而是日文精準描繪「怎麼發生、發生得多持續」的重要工具。學會抓住疊字結構背後暗示的「持續感／節奏感」，比死背每個字的中文翻譯更容易掌握真正的語感。"
+    ],
+    quiz:[
+      { q:'擬態語和擬音語的差別是？', options:['擬音語模仿實際存在的聲音，擬態語描繪沒有聲音的狀態或動作方式','兩者完全一樣，可以互換使用','擬態語只會出現在漫畫裡'], answer:0 },
+      { q:'「どきどき」這類疊字結構通常在暗示什麼？', options:['動作已經結束了','持續、反覆發生的狀態或節奏感','這是敬語的一種'], answer:1 }
+    ] }
+];
+
+function loadGrammarProgress(){ return JSON.parse(localStorage.getItem(LS_GRAMMAR) || '{}'); }
+function saveGrammarProgress(p){ localStorage.setItem(LS_GRAMMAR, JSON.stringify(p)); }
+
+let currentGrammarId = null;
+
+function renderGrammar(){
+  if(currentGrammarId) renderGrammarDetail();
+  else renderGrammarList();
+}
+
+function renderGrammarList(){
+  const progress = loadGrammarProgress();
+  const readCount = GRAMMAR.filter(c=>progress[c.id]).length;
+  const quizDoneCount = GRAMMAR.filter(c=>progress[c.id] && typeof progress[c.id]==='object' && progress[c.id].quizScore!==undefined).length;
+  const area = document.getElementById('grammar-area');
+  area.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div style="font-size:0.78rem;color:var(--ink-soft);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Japanese Logic</div>
+      <div style="font-family:var(--serif);font-size:1.9rem;font-weight:600;letter-spacing:-0.01em;margin:0 0 8px;">日文的邏輯概念</div>
+      <div class="sub" style="margin:0;">不是死背規則，是理解「為什麼日文這樣運作」・已讀 ${readCount} / ${GRAMMAR.length} 章・已測驗 ${quizDoneCount} 章</div>
+    </div>
+    ${GRAMMAR.map((c,i)=>{
+      const p = progress[c.id];
+      let badge = '';
+      if(p){
+        const hasQuiz = typeof p === 'object' && p.quizScore !== undefined;
+        badge = hasQuiz
+          ? `<span class="pos-tag" style="white-space:nowrap;">已讀・測驗 ${p.quizScore}/${p.quizTotal}</span>`
+          : `<span class="pos-tag" style="white-space:nowrap;">已讀</span>`;
+      }
+      return `
+        <div class="card reading-card" data-open="${c.id}" style="display:flex;align-items:center;gap:16px;" role="button" tabindex="0" aria-label="開啟第${i+1}章：${c.title}">
+          <div style="font-family:var(--serif);font-size:1.6rem;color:var(--accent);font-weight:700;width:38px;flex-shrink:0;text-align:center;">${i+1}</div>
+          <div style="flex:1;">
+            <h3 style="margin:0;font-size:1.05rem;">${c.title}</h3>
+          </div>
+          ${badge}
+        </div>
+      `;
+    }).join('')}
+  `;
+  area.querySelectorAll('[data-open]').forEach(el=>{
+    const open = ()=>{ currentGrammarId = el.dataset.open; renderGrammar(); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); open(); } });
+  });
+}
+
+function markGrammarRead(cid){
+  const progress = loadGrammarProgress();
+  let entry = progress[cid];
+  if(!entry || entry === true) entry = {};
+  entry.read = true;
+  progress[cid] = entry;
+  saveGrammarProgress(progress);
+}
+
+function renderGrammarDetail(){
+  const idx = GRAMMAR.findIndex(c=>c.id===currentGrammarId);
+  const c = GRAMMAR[idx];
+  markGrammarRead(c.id);
+  markStudied();
+
+  const area = document.getElementById('grammar-area');
+  area.innerHTML = `
+    <button class="action btn-ghost" id="grammar-back-btn" style="margin-bottom:14px;">← 返回目錄</button>
+    <div class="card">
+      <div style="font-size:0.78rem;color:var(--ink-soft);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Chapter ${idx+1} / ${GRAMMAR.length}</div>
+      <h3 style="font-size:1.4rem;margin-bottom:16px;">${c.title}</h3>
+      <div class="reading-text">
+        ${c.paras.map(p=>`<p style="margin:0 0 16px;">${p}</p>`).join('')}
+      </div>
+    </div>
+    ${c.quiz && c.quiz.length ? `
+      <div class="card">
+        <h3>本章小測驗・加深印象</h3>
+        <div class="sub" style="margin-bottom:12px;">讀完馬上考，比只看不練更容易記住</div>
+        <div id="grammar-questions"></div>
+        <button class="action btn-primary" id="grammar-quiz-submit-btn">提交答案</button>
+      </div>
+    ` : ''}
+    <div class="btn-row" style="justify-content:space-between;">
+      <button class="action btn-ghost" id="grammar-prev-btn" ${idx===0?'style="visibility:hidden;"':''}>← 上一章</button>
+      <button class="action btn-primary" id="grammar-next-btn" ${idx===GRAMMAR.length-1?'style="visibility:hidden;"':''}>下一章 →</button>
+    </div>
+  `;
+  document.getElementById('grammar-back-btn').addEventListener('click', ()=>{
+    currentGrammarId = null;
+    renderGrammar();
+  });
+  if(idx>0){
+    document.getElementById('grammar-prev-btn').addEventListener('click', ()=>{
+      currentGrammarId = GRAMMAR[idx-1].id;
+      renderGrammar();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  }
+  if(idx<GRAMMAR.length-1){
+    document.getElementById('grammar-next-btn').addEventListener('click', ()=>{
+      currentGrammarId = GRAMMAR[idx+1].id;
+      renderGrammar();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  }
+  if(c.quiz && c.quiz.length){
+    const qEl = document.getElementById('grammar-questions');
+    c.quiz.forEach((q, qi)=>{
+      const block = document.createElement('div');
+      block.className = 'q-block';
+      block.innerHTML = `<div class="q-title">${qi+1}. ${q.q}</div>` +
+        q.options.map((opt,oi)=>`
+          <label class="q-opt" data-qi="${qi}" data-oi="${oi}">
+            <input type="radio" name="gq${qi}" value="${oi}">${opt}
+          </label>
+        `).join('');
+      qEl.appendChild(block);
+    });
+    document.getElementById('grammar-quiz-submit-btn').addEventListener('click', ()=> submitGrammarQuiz(c));
+  }
+}
+
+function submitGrammarQuiz(c){
+  let score = 0;
+  c.quiz.forEach((q, qi)=>{
+    const checked = document.querySelector(`input[name="gq${qi}"]:checked`);
+    const sel = checked ? parseInt(checked.value) : -1;
+    if(sel === q.answer) score++;
+    document.querySelectorAll(`.q-opt[data-qi="${qi}"]`).forEach(label=>{
+      const oi = parseInt(label.dataset.oi);
+      label.querySelector('input').disabled = true;
+      if(oi === q.answer){ label.classList.add('opt-correct'); label.prepend(document.createTextNode('✓ ')); }
+      else if(oi === sel){ label.classList.add('opt-wrong'); label.prepend(document.createTextNode('✕ ')); }
+    });
+  });
+
+  const progress = loadGrammarProgress();
+  let entry = progress[c.id];
+  if(!entry || entry === true) entry = {};
+  entry.read = true;
+  entry.quizScore = score;
+  entry.quizTotal = c.quiz.length;
+  progress[c.id] = entry;
+  saveGrammarProgress(progress);
+  markStudied();
+
+  const submitBtn = document.getElementById('grammar-quiz-submit-btn');
+  submitBtn.style.display = 'none';
+  const scoreDiv = document.createElement('div');
+  scoreDiv.className = 'pron-result ' + (score===c.quiz.length ? 'ok' : 'bad');
+  scoreDiv.textContent = `得分：${score} / ${c.quiz.length}`;
+  document.getElementById('grammar-questions').appendChild(scoreDiv);
+}
+
+/* ---------- READING ---------- */
+const LS_READING = 'jl_reading';
+
+const READINGS = [
+  {
+    id:'r1',
+    title:'朝の習慣（早晨的習慣）',
+    grammarFocus:['g4','g2'],
+    text:`私は毎朝六時に起きます。起きて、すぐに顔を洗います。それから、朝ごはんを食べます。私はいつもパンとコーヒーを飲みます。朝ごはんを食べた後、新聞を読みます。天気がいい日は、散歩に行きます。天気が悪い日は、家で本を読みます。七時半に家を出て、会社に行きます。電車はいつも混んでいますが、会社までは三十分ぐらいです。この習慣は簡単ですが、一日を元気に始めるために、とても大切です。`,
+    questions:[
+      { q:'作者每天早上幾點起床？', options:['六點','七點','七點半'], answer:0 },
+      { q:'早餐後作者通常會做什麼？', options:['馬上出門','看報紙','馬上睡覺'], answer:1 },
+      { q:'天氣不好的時候，作者會做什麼？', options:['去散步','在家看書','不吃早餐'], answer:1 }
+    ]
+  },
+  {
+    id:'r2',
+    title:'週末の予定（週末的計畫）',
+    grammarFocus:['g9','g3'],
+    text:`今度の週末、友達と図書館で勉強するつもりです。もし時間があれば、映画も見たいです。土曜日の朝、まず部屋を掃除します。それから、友達に会って、一緒に図書館に行きます。図書館で三時間ぐらい勉強したら、近くのレストランでご飯を食べます。日曜日は、天気がよかったら、公園を散歩します。天気が悪かったら、家でゆっくり休みます。友達と会うのは楽しいですから、週末が来るのが楽しみです。`,
+    questions:[
+      { q:'週六早上作者第一件事會做什麼？', options:['打掃房間','去圖書館','看電影'], answer:0 },
+      { q:'在圖書館讀完書之後，作者接下來會做什麼？', options:['馬上回家','去附近的餐廳吃飯','去公園散步'], answer:1 },
+      { q:'週日如果天氣不好，作者會做什麼？', options:['去公園散步','在家好好休息','去圖書館'], answer:1 }
+    ]
+  },
+  {
+    id:'r3',
+    title:'忙しい一日（忙碌的一天）',
+    grammarFocus:['g7','g6'],
+    text:`今日は忙しい一日でした。朝、先生が新しい本をくれました。とても嬉しかったです。その後、会社で会議がありました。会議で、部長に資料を見せました。部長は「よくできましたね」と言ってくれました。お昼、友達に会って、一緒にご飯を食べました。友達は財布を忘れて、私がお金を貸してあげました。夕方、母に電話をかけました。母は元気そうでした。今日は忙しかったですが、いい一日でした。`,
+    questions:[
+      { q:'今天早上誰給了作者一本新書？', options:['朋友','老師','部長'], answer:1 },
+      { q:'午餐時朋友發生了什麼事？', options:['忘記帶錢包','忘記帶書','遲到了'], answer:0 },
+      { q:'作者傍晚做了什麼？', options:['去見老師','打電話給媽媽','去圖書館'], answer:1 }
+    ]
+  }
+];
+
+function loadReadingProgress(){ return JSON.parse(localStorage.getItem(LS_READING) || '{}'); }
+function saveReadingProgress(p){ localStorage.setItem(LS_READING, JSON.stringify(p)); }
+
+const GRAMMAR_SHORT = {
+  g1:'語順與助詞', g2:'は vs が', g3:'を/に/で/へ', g4:'動詞變化邏輯', g5:'い形容詞vsな形容詞',
+  g6:'敬語系統', g7:'あげる/くれる/もらう', g8:'可能/使役/受身', g9:'と/ば/たら/なら', g10:'漢字部首邏輯',
+  g11:'助数詞邏輯', g12:'擬音語・擬態語'
+};
+
+function grammarFocusTags(ids){
+  if(!ids || ids.length===0) return '';
+  return `<div class="grammar-tag-row">${ids.map(gid=>{
+    const num = GRAMMAR.findIndex(c=>c.id===gid) + 1;
+    return `<button type="button" class="grammar-tag" data-goto="${gid}">第${num}章・${GRAMMAR_SHORT[gid]||gid}</button>`;
+  }).join('')}</div>`;
+}
+
+function wireGrammarTags(container){
+  container.querySelectorAll('.grammar-tag').forEach(tag=>{
+    tag.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      goToGrammarChapter(tag.dataset.goto);
+    });
+  });
+}
+
+function goToGrammarChapter(gid){
+  document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const gBtn = document.querySelector('.tab-btn[data-tab="grammar"]');
+  gBtn.classList.add('active');
+  gBtn.setAttribute('aria-selected','true');
+  document.getElementById('panel-grammar').classList.add('active');
+  currentGrammarId = gid;
+  renderGrammar();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+let currentReadingId = null;
+
+function renderReading(){
+  if(currentReadingId) renderReadingDetail();
+  else renderReadingList();
+}
+
+function renderReadingList(){
+  const progress = loadReadingProgress();
+  const area = document.getElementById('reading-area');
+  area.innerHTML = `<div class="sub" style="margin-bottom:6px;">讀完短文後做理解測驗，練習不查字典也能抓住大意</div>` +
+    READINGS.map(r=>{
+      const p = progress[r.id];
+      const preview = r.text.slice(0,50) + '...';
+      return `
+        <div class="card reading-card" data-open="${r.id}" role="button" tabindex="0" aria-label="開啟文章：${r.title}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <h3 style="margin:0;">${r.title}</h3>
+            ${p ? `<span class="pos-tag" style="white-space:nowrap;">已完成 ${p.score}/${p.total}</span>` : ''}
+          </div>
+          <div class="sub" style="margin:8px 0 0;" lang="ja">${preview}</div>
+          ${grammarFocusTags(r.grammarFocus)}
+        </div>
+      `;
+    }).join('');
+  area.querySelectorAll('[data-open]').forEach(el=>{
+    const open = ()=>{ currentReadingId = el.dataset.open; renderReading(); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); open(); } });
+  });
+  wireGrammarTags(area);
+}
+
+function renderReadingDetail(){
+  const r = READINGS.find(x=>x.id===currentReadingId);
+  const area = document.getElementById('reading-area');
+  area.innerHTML = `
+    <button class="action btn-ghost" id="reading-back-btn" style="margin-bottom:14px;">← 返回文章列表</button>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <h3 style="margin:0;">${r.title}</h3>
+        <button class="icon-btn" id="reading-speak-btn" aria-label="朗讀全文" title="朗讀全文" style="width:32px;height:32px;font-size:0.95rem;">🔊</button>
+      </div>
+      ${grammarFocusTags(r.grammarFocus)}
+      <div class="reading-text" lang="ja" style="margin-top:12px;">${r.text}</div>
+    </div>
+    <div class="card">
+      <h3>理解測驗</h3>
+      <div id="reading-questions"></div>
+      <button class="action btn-primary" id="reading-submit-btn">提交答案</button>
+    </div>
+  `;
+  const qEl = document.getElementById('reading-questions');
+  r.questions.forEach((q, qi)=>{
+    const block = document.createElement('div');
+    block.className = 'q-block';
+    block.innerHTML = `<div class="q-title">${qi+1}. ${q.q}</div>` +
+      q.options.map((opt,oi)=>`
+        <label class="q-opt" data-qi="${qi}" data-oi="${oi}">
+          <input type="radio" name="rq${qi}" value="${oi}">${opt}
+        </label>
+      `).join('');
+    qEl.appendChild(block);
+  });
+  document.getElementById('reading-back-btn').addEventListener('click', ()=>{
+    currentReadingId = null;
+    renderReading();
+  });
+  document.getElementById('reading-speak-btn').addEventListener('click', ()=> speak(r.text));
+  document.getElementById('reading-submit-btn').addEventListener('click', ()=> submitReading(r));
+  wireGrammarTags(area);
+}
+
+function submitReading(r){
+  let score = 0;
+  r.questions.forEach((q, qi)=>{
+    const checked = document.querySelector(`input[name="rq${qi}"]:checked`);
+    const sel = checked ? parseInt(checked.value) : -1;
+    if(sel === q.answer) score++;
+    document.querySelectorAll(`.q-opt[data-qi="${qi}"]`).forEach(label=>{
+      const oi = parseInt(label.dataset.oi);
+      label.querySelector('input').disabled = true;
+      if(oi === q.answer){ label.classList.add('opt-correct'); label.prepend(document.createTextNode('✓ ')); }
+      else if(oi === sel){ label.classList.add('opt-wrong'); label.prepend(document.createTextNode('✕ ')); }
+    });
+  });
+
+  const progress = loadReadingProgress();
+  progress[r.id] = { score, total:r.questions.length, date: todayStr() };
+  saveReadingProgress(progress);
+  markStudied();
+
+  const submitBtn = document.getElementById('reading-submit-btn');
+  submitBtn.style.display = 'none';
+  const scoreDiv = document.createElement('div');
+  scoreDiv.className = 'pron-result ' + (score===r.questions.length ? 'ok' : 'bad');
+  scoreDiv.textContent = `得分：${score} / ${r.questions.length}`;
+  document.getElementById('reading-questions').appendChild(scoreDiv);
+}
+
+/* ---------- PROGRESS ---------- */
+function renderProgress(){
+  const log = loadLog();
+  document.getElementById('stat-streak').textContent = calcStreak(log);
+  document.getElementById('stat-total').textContent = vocab.length;
+  document.getElementById('stat-mastered').textContent = vocab.filter(w=>w.box>=5).length;
+
+  const modulesEl = document.getElementById('module-progress');
+  if(modulesEl){
+    const gp = loadGrammarProgress();
+    const grammarRead = GRAMMAR.filter(c=>gp[c.id]).length;
+    const grammarQuizEntries = GRAMMAR.filter(c=>gp[c.id] && typeof gp[c.id]==='object' && gp[c.id].quizScore!==undefined);
+    const grammarQuizText = grammarQuizEntries.length
+      ? `平均 ${Math.round(grammarQuizEntries.reduce((s,c)=>s+gp[c.id].quizScore/gp[c.id].quizTotal,0)/grammarQuizEntries.length*100)}%`
+      : '尚未測驗';
+
+    const rp = loadReadingProgress();
+    const readingDone = READINGS.filter(r=>rp[r.id]).length;
+    const readingEntries = READINGS.filter(r=>rp[r.id]);
+    const readingAvgText = readingEntries.length
+      ? `平均 ${Math.round(readingEntries.reduce((s,r)=>s+rp[r.id].score/rp[r.id].total,0)/readingEntries.length*100)}%`
+      : '尚未作答';
+
+    const idiomMastered = idioms.filter(w=>w.box>=5).length;
+
+    modulesEl.innerHTML = `
+      <div class="word-item">
+        <div class="info"><b>文法邏輯</b><span>已讀 ${grammarRead} / ${GRAMMAR.length} 章</span></div>
+        <div style="color:var(--ink-soft);font-size:0.85rem;">${grammarQuizText}</div>
+      </div>
+      <div class="word-item">
+        <div class="info"><b>閱讀</b><span>已完成 ${readingDone} / ${READINGS.length} 篇</span></div>
+        <div style="color:var(--ink-soft);font-size:0.85rem;">${readingAvgText}</div>
+      </div>
+      <div class="word-item">
+        <div class="info"><b>慣用句・ことわざ</b><span>已熟練 ${idiomMastered} / ${idioms.length} 個</span></div>
+        <div></div>
+      </div>
+    `;
+  }
+
+  const hm = document.getElementById('heatmap');
+  hm.innerHTML = '';
+  const today = new Date();
+  const days = [];
+  for(let i=29;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    days.push(key);
+  }
+  days.forEach(key=>{
+    const div = document.createElement('div');
+    div.className = 'day' + (log[key] ? ' active' : '');
+    div.title = key + (log[key] ? '（有學習）' : '');
+    hm.appendChild(div);
+  });
+
+  const historyEl = document.getElementById('quiz-history');
+  const history = loadQuizHistory();
+  if(history.length===0){
+    historyEl.innerHTML = `<div class="empty-msg">還沒有測驗紀錄</div>`;
+  } else {
+    historyEl.innerHTML = history.slice(0,10).map(h=>
+      `<div class="word-item"><div class="info"><b>${h.date}</b></div><div>${h.score} / ${h.total}</div></div>`
+    ).join('');
+  }
+}
+
+function calcStreak(log){
+  let streak = 0;
+  let cursor = todayStr();
+  // if today not studied yet, streak still counts backwards from yesterday
+  if(!log[cursor]){
+    cursor = addDays(cursor, -1);
+  }
+  while(log[cursor]){
+    streak++;
+    cursor = addDays(cursor, -1);
+  }
+  return streak;
+}
+
+/* ---------- MANAGE ---------- */
+let editingId = null;
+
+function renderManage(){
+  document.getElementById('word-count').textContent = vocab.length;
+  const list = document.getElementById('word-list');
+  if(vocab.length===0){
+    list.innerHTML = `<div class="empty-msg">還沒有單字，新增一些吧！</div>`;
+    return;
+  }
+  list.innerHTML = [...vocab].reverse().map(w=>`
+    <div class="word-item">
+      <div class="info">
+        <b lang="ja">${esc(w.jp)}</b>${w.kana ? ` <span style="color:var(--ink-soft);font-weight:400;">${esc(w.kana)}</span>` : ''}${w.pos ? ` <span class="pos-tag" style="margin:0;">${esc(w.pos)}</span>` : ''}
+        <span>${w.meanings.map(m=>esc(m.zh)).join('；')}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <span class="box-tag">Box ${w.box}</span>
+        <button class="del-btn" data-edit="${w.id}" aria-label="編輯${esc(w.jp)}" title="編輯" style="color:var(--accent);">✎</button>
+        <button class="del-btn" data-del="${w.id}" aria-label="刪除${esc(w.jp)}" title="刪除">✕</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-edit]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const w = vocab.find(x=>x.id === b.dataset.edit);
+      if(w) fillFormForEdit(w);
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      vocab = vocab.filter(w=>w.id !== b.dataset.del);
+      saveVocab(vocab);
+      if(editingId === b.dataset.del) resetForm();
+      renderManage();
+    });
+  });
+}
+
+function fillFormForEdit(w){
+  editingId = w.id;
+  document.getElementById('form-title').textContent = '編輯單字';
+  document.getElementById('in-jp').value = w.jp;
+  document.getElementById('in-pos').value = w.pos || '';
+  document.getElementById('in-kana').value = w.kana || '';
+  document.getElementById('in-romaji').value = w.romaji || '';
+  document.getElementById('in-kanji').value = w.kanjiBreakdown || '';
+  document.getElementById('in-phonics').value = w.phonicsNote || '';
+  [0,1,2].forEach(i=>{
+    document.getElementById('in-zh-'+(i+1)).value = w.meanings[i] ? w.meanings[i].zh : '';
+    document.getElementById('in-example-'+(i+1)).value = w.meanings[i] ? (w.meanings[i].example||'') : '';
+    document.getElementById('in-example-zh-'+(i+1)).value = w.meanings[i] ? (w.meanings[i].exampleZh||'') : '';
+  });
+  document.getElementById('add-word-btn').textContent = '儲存修改';
+  document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+  document.getElementById('form-title').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function resetForm(){
+  editingId = null;
+  document.getElementById('form-title').textContent = '新增單字 / 慣用語';
+  document.getElementById('in-jp').value = '';
+  document.getElementById('in-pos').value = '';
+  document.getElementById('in-kana').value = '';
+  document.getElementById('in-romaji').value = '';
+  document.getElementById('in-kanji').value = '';
+  document.getElementById('in-phonics').value = '';
+  [1,2,3].forEach(i=>{
+    document.getElementById('in-zh-'+i).value = '';
+    document.getElementById('in-example-'+i).value = '';
+    document.getElementById('in-example-zh-'+i).value = '';
+  });
+  document.getElementById('add-word-btn').textContent = '新增';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
+}
+
+document.getElementById('cancel-edit-btn').addEventListener('click', resetForm);
+
+document.getElementById('add-word-btn').addEventListener('click', ()=>{
+  const jp = document.getElementById('in-jp').value.trim();
+  const pos = document.getElementById('in-pos').value;
+  const kana = document.getElementById('in-kana').value.trim();
+  const romaji = document.getElementById('in-romaji').value.trim();
+  const kanjiBreakdown = document.getElementById('in-kanji').value.trim();
+  const phonicsNote = document.getElementById('in-phonics').value.trim();
+  const meanings = [1,2,3].map(i=>({
+    zh: document.getElementById('in-zh-'+i).value.trim(),
+    example: document.getElementById('in-example-'+i).value.trim(),
+    exampleZh: document.getElementById('in-example-zh-'+i).value.trim()
+  })).filter(m=>m.zh);
+
+  if(!jp || meanings.length===0){ alert('請至少填寫日文和一組中文意思'); return; }
+
+  if(editingId){
+    const w = vocab.find(x=>x.id===editingId);
+    if(w) Object.assign(w, { jp, pos, kana, romaji, kanjiBreakdown, phonicsNote, meanings });
+  } else {
+    vocab.push({
+      id:'w'+Date.now(), jp, pos, kana, romaji, kanjiBreakdown, phonicsNote, meanings,
+      emoji:'', image:'', credit:'', creditUrl:'',
+      box:1, nextReview: todayStr()
+    });
+  }
+  saveVocab(vocab);
+  resetForm();
+  renderManage();
+});
+
+document.getElementById('bulk-add-btn').addEventListener('click', ()=>{
+  const raw = document.getElementById('bulk-input').value;
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach((line, i)=>{
+    // 只切「前後都有空白的 -」，避免詞語本身帶連字號時被切錯
+    const sep = line.match(/\s-\s/);
+    if(!sep) return;
+    const jp = line.slice(0, sep.index).trim();
+    const zh = line.slice(sep.index + sep[0].length).trim();
+    if(jp && zh){
+      vocab.push({
+        id:'w'+Date.now()+i, jp, pos:'', kana:'', romaji:'', kanjiBreakdown:'', phonicsNote:'',
+        meanings:[{zh, example:'', exampleZh:''}],
+        emoji:'', image:'', credit:'', creditUrl:'',
+        box:1, nextReview: todayStr()
+      });
+      added++;
+    }
+  });
+  saveVocab(vocab);
+  document.getElementById('bulk-input').value='';
+  renderManage();
+  if(added>0) alert(`已新增 ${added} 個單字`);
+});
+
+
+document.getElementById('reset-vocab-btn').addEventListener('click', ()=>{
+  if(!confirm('確定要清空目前單字，換成 20 個簡易起始單字嗎？')) return;
+  vocab = SEED.map(seedToWord);
+  saveVocab(vocab);
+  resetForm();
+  renderManage();
+  alert('已重設完成！');
+});
+
+/* ---------- BACKUP ---------- */
+document.getElementById('export-btn').addEventListener('click', ()=>{
+  const backup = {
+    vocab: vocab,
+    log: loadLog(),
+    quizHistory: loadQuizHistory(),
+    idioms: idioms,
+    idiomQuizHistory: JSON.parse(localStorage.getItem(LS_IDIOM_QUIZ) || '[]'),
+    readingProgress: loadReadingProgress(),
+    grammarProgress: loadGrammarProgress(),
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `日文學習備份_${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('import-btn').addEventListener('click', ()=>{
+  document.getElementById('import-file').click();
+});
+
+document.getElementById('import-file').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!Array.isArray(data.vocab) || !data.vocab.every(w=>w && typeof w.jp==='string' && Array.isArray(w.meanings))){
+        throw new Error('格式不正確');
+      }
+      if(!confirm('匯入將覆蓋目前所有單字與進度資料，確定要繼續嗎？')) return;
+      vocab = data.vocab;
+      saveVocab(vocab);
+      if(data.log) saveLog(data.log);
+      if(data.quizHistory) saveQuizHistory(data.quizHistory);
+      if(Array.isArray(data.idioms) && data.idioms.every(w=>w && typeof w.jp==='string' && Array.isArray(w.meanings))){
+        idioms = data.idioms;
+        saveIdioms(idioms);
+      }
+      if(data.idiomQuizHistory) localStorage.setItem(LS_IDIOM_QUIZ, JSON.stringify(data.idiomQuizHistory));
+      if(data.readingProgress) saveReadingProgress(data.readingProgress);
+      if(data.grammarProgress) saveGrammarProgress(data.grammarProgress);
+      resetForm();
+      renderManage();
+      alert('匯入完成！');
+    } catch(err){
+      alert('匯入失敗，檔案格式不正確');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ---------- VOICE PICKER ---------- */
+document.getElementById('voice-select').addEventListener('change', (e)=>{
+  localStorage.setItem(LS_VOICE, e.target.value);
+});
+document.getElementById('voice-test-btn').addEventListener('click', ()=>{
+  speak('こんにちは。これは私の声です。よろしくお願いします。');
+});
+
+/* ---------- INIT ---------- */
+renderGrammar();
+</script>
+
+</body>
+</html>
