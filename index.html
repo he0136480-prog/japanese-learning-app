@@ -1473,7 +1473,7 @@ function checkPronunciation(word, micBtnId, resultBoxId){
   micBtn.classList.add('listening');
   resultBox.innerHTML = '';
 
-  const targets = [normalizeJp(word.jp), normalizeJp(word.kana)].filter(Boolean);
+  const targets = [normalizeJp(word.jp), ...String(word.kana||'').split('／').map(normalizeJp)].filter(Boolean);
 
   recognition.onresult = (event)=>{
     const alternatives = Array.from(event.results[0]).map(r=>normalizeJp(r.transcript));
@@ -1483,7 +1483,7 @@ function checkPronunciation(word, micBtnId, resultBoxId){
       resultBox.innerHTML = `<div class="pron-result ok">✅ 發音正確！（辨識結果：${esc(shown)}）</div>`;
       incrementDailyCount();
     } else {
-      const target = normalizeJp(word.kana) || normalizeJp(word.jp);
+      const target = normalizeJp(String(word.kana||'').split('／')[0]) || normalizeJp(word.jp);
       const hint = diagnosePronunciation(target, normalizeJp(shown));
       resultBox.innerHTML = `<div class="pron-result bad">🔁 再試一次！（辨識結果：${esc(shown) || '（沒聽清楚）'}）${hint ? `<div style="margin-top:6px;font-size:0.85rem;">💡 ${esc(hint)}</div>` : ''}</div>`;
     }
@@ -1615,6 +1615,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
         ${flipped ? `
           <button class="icon-btn" id="${P}-mic-btn" aria-label="測試我的發音" title="測試我的發音" style="margin-top:14px;">🎤</button>
           <div id="${P}-pron-result-box" aria-live="polite"></div>
+          <div class="sub" style="font-size:0.72rem;margin-top:4px;">💡 發音提示為瀏覽器語音辨識的粗略估算，僅供參考，不是精準的發音評分</div>
         ` : ''}
       </div>
       ${flipped ? `
