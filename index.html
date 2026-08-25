@@ -765,6 +765,15 @@ function seedToWord(s, i){
 function primaryZh(w){ return (w.meanings && w.meanings[0]) ? w.meanings[0].zh : ''; }
 
 // 使用者自己輸入的單字內容在插入畫面前先跳脫，避免打到 < > 等符號時版面跑掉
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function esc(str){
   if(str === undefined || str === null) return '';
   return String(str)
@@ -1023,7 +1032,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
 
   function render(){
     const today = todayStr();
-    queue = getData().filter(w => w.nextReview <= today);
+    queue = shuffle(getData().filter(w => w.nextReview <= today));
     idx = 0;
     flipped = false;
     const area = document.getElementById(areaId);
@@ -1143,11 +1152,11 @@ function makeQuizController({ getData, areaId, historyKey }){
   }
 
   function build(data){
-    const pool = [...data].sort(()=>Math.random()-0.5).slice(0, Math.min(10, data.length));
+    const pool = shuffle(data).slice(0, Math.min(10, data.length));
     return pool.map(w=>{
-      const distractors = data.filter(x=>x.id!==w.id).sort(()=>Math.random()-0.5).slice(0,3).map(x=>primaryZh(x));
+      const distractors = shuffle(data.filter(x=>x.id!==w.id)).slice(0,3).map(x=>primaryZh(x));
       const answer = primaryZh(w);
-      const options = [...distractors, answer].sort(()=>Math.random()-0.5);
+      const options = shuffle([...distractors, answer]);
       return { word:w, options, answer };
     });
   }
