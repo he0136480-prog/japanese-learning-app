@@ -280,6 +280,27 @@
     font-weight:700;
     letter-spacing:0.03em;
   }
+  .leech-tag{
+    display:inline-block;
+    font-size:0.72rem;
+    padding:4px 12px;
+    border-radius:20px;
+    background:var(--bad-soft);
+    color:var(--bad);
+    margin-top:10px;
+    margin-left:6px;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+  .leech-dot{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--bad);
+    margin-right:6px;
+    flex-shrink:0;
+  }
   .flashcard .meaning{
     font-family:var(--serif);
     font-size:1.25rem;
@@ -813,6 +834,7 @@ const LS_LOG = 'jl_studylog';
 const LS_QUIZ = 'jl_quizhistory';
 
 const BOX_INTERVAL_DAYS = [0,1,2,4,7,14]; // index = box number (1-5)
+const LEECH_THRESHOLD = 3; // 累計答錯達到這個次數，標記為「加強關卡」提醒使用者換方法記
 
 const SEED = [
   { jp:"学校", kana:"がっこう", romaji:"gakkou", zh:"學校", example:"私は毎日学校へ行きます。", exampleZh:"我每天去學校。", pos:"名詞", emoji:"🏫",
@@ -1630,6 +1652,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
         ${(w.kana || w.romaji) ? `<div class="reading-row">${[w.kana, w.romaji].filter(Boolean).map(esc).join('　')}</div>` : ''}
         ${flipped ? `
           ${w.pos ? `<div class="pos-tag">${esc(w.pos)}</div>` : ''}
+          ${(w.misses||0) >= LEECH_THRESHOLD ? `<div class="leech-tag">⚠️ 加強關卡・已經記不住 ${w.misses} 次</div>` : ''}
           ${w.meanings.map((m,i)=>`
             <div class="meaning">${w.meanings.length>1 ? (i+1)+'. ' : ''}${esc(m.zh)}</div>
             ${m.example ? `<div class="example" lang="ja">${esc(m.example)} <button class="icon-btn example-speak-btn" data-speak-text="${esc(m.example)}" aria-label="播放例句發音" title="播放例句發音" style="width:24px;height:24px;font-size:0.72rem;vertical-align:middle;">🔊</button></div>` : ''}
@@ -1688,6 +1711,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
     } else {
       w.box = 1;
       w.nextReview = today;
+      w.misses = (w.misses||0) + 1; // 累計答錯次數不會因為答對而重置，用來抓出「加強關卡」單字
       // 不熟的字排到這一輪稍後的位置再考一次，當場加強記憶
       const alreadyQueuedAgain = queue.slice(idx+1).includes(w);
       if(!alreadyQueuedAgain){
@@ -2424,7 +2448,7 @@ function renderManage(){
   list.innerHTML = [...vocab].reverse().map(w=>`
     <div class="word-item">
       <div class="info">
-        <b lang="ja">${esc(w.jp)}</b>${w.kana ? ` <span style="color:var(--ink-soft);font-weight:400;">${esc(w.kana)}</span>` : ''}${w.pos ? ` <span class="pos-tag" style="margin:0;">${esc(w.pos)}</span>` : ''}
+        ${(w.misses||0) >= LEECH_THRESHOLD ? `<span class="leech-dot" aria-label="加強關卡單字" title="加強關卡：已經記不住 ${w.misses} 次"></span>` : ''}<b lang="ja">${esc(w.jp)}</b>${w.kana ? ` <span style="color:var(--ink-soft);font-weight:400;">${esc(w.kana)}</span>` : ''}${w.pos ? ` <span class="pos-tag" style="margin:0;">${esc(w.pos)}</span>` : ''}
         <span>${w.meanings.map(m=>esc(m.zh)).join('；')}</span>
       </div>
       <div style="display:flex;align-items:center;gap:4px;">
