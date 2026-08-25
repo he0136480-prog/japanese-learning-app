@@ -444,11 +444,34 @@
     letter-spacing:-0.01em;
   }
 
-  .idiom-subtab.active{
+  .idiom-subtab.active, .kana-subtab.active{
     background:var(--accent);
     border-color:var(--accent);
     color:#fff;
   }
+
+  .kana-grid{
+    display:grid;
+    gap:8px;
+    margin-top:10px;
+  }
+  .kana-cell{
+    border:1px solid var(--line);
+    background:var(--card);
+    border-radius:12px;
+    padding:10px 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .kana-cell:hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .kana-cell:active{ transform:scale(0.95); }
+  .kana-cell-empty{ border:none; background:transparent; cursor:default; }
+  .kana-glyph{ font-family:var(--serif); font-size:1.3rem; }
+  .kana-romaji{ font-size:0.68rem; color:var(--ink-soft); }
 
   .grammar-tag-row{
     display:flex;
@@ -505,6 +528,8 @@
     .card{ padding:16px; }
     .flashcard{ padding:22px 16px; min-height:auto; }
     .heatmap{ grid-template-columns:repeat(10,1fr); }
+    .kana-cell{ padding:8px 2px; }
+    .kana-glyph{ font-size:1.1rem; }
   }
 </style>
 </head>
@@ -514,7 +539,7 @@
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
     <div>
       <h1>📚 我的日文學習程式</h1>
-      <div class="sub" style="margin-bottom:0;">文法邏輯 ・ 單字卡複習 ・ 小測驗 ・ 學習進度</div>
+      <div class="sub" style="margin-bottom:0;">50音・基礎訓練 ・ 文法邏輯 ・ 單字卡複習 ・ 小測驗 ・ 學習進度</div>
     </div>
     <a href="https://he0136480-prog.github.io/fictional-adventure/" style="text-decoration:none;flex-shrink:0;">
       <span class="pos-tag" style="margin:0;font-size:0.78rem;padding:6px 14px;">🇺🇸 切換到英文版 →</span>
@@ -523,7 +548,8 @@
 </header>
 
 <nav role="tablist" aria-label="主要功能分頁">
-  <button class="tab-btn active" data-tab="grammar" role="tab" aria-selected="true">文法邏輯</button>
+  <button class="tab-btn active" data-tab="kana" role="tab" aria-selected="true">50音・基礎訓練</button>
+  <button class="tab-btn" data-tab="grammar" role="tab" aria-selected="false">文法邏輯</button>
   <button class="tab-btn" data-tab="flash" role="tab" aria-selected="false">單字卡</button>
   <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">小測驗</button>
   <button class="tab-btn" data-tab="reading" role="tab" aria-selected="false">閱讀</button>
@@ -534,8 +560,23 @@
 
 <main>
 
-  <!-- GRAMMAR LOGIC (書本式，預設首頁) -->
-  <section class="panel active" id="panel-grammar" role="tabpanel" aria-label="文法邏輯">
+  <!-- 50音・日語基礎訓練 (預設首頁) -->
+  <section class="panel active" id="panel-kana" role="tabpanel" aria-label="50音・基礎訓練">
+    <div class="sub" style="margin-bottom:14px;">從假名和最基本的招呼語開始，這是學日文的第一步</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="action btn-ghost kana-subtab active" data-kana-tab="chart">50音圖表</button>
+      <button class="action btn-ghost kana-subtab" data-kana-tab="kquiz">假名測驗</button>
+      <button class="action btn-ghost kana-subtab" data-kana-tab="basics-flash">基礎會話卡</button>
+      <button class="action btn-ghost kana-subtab" data-kana-tab="basics-quiz">基礎會話測驗</button>
+    </div>
+    <div id="kana-chart-area"></div>
+    <div class="card" id="kana-quiz-area" style="display:none;"></div>
+    <div id="basics-flash-area" style="display:none;"></div>
+    <div class="card" id="basics-quiz-area" style="display:none;"></div>
+  </section>
+
+  <!-- GRAMMAR LOGIC (書本式) -->
+  <section class="panel" id="panel-grammar" role="tabpanel" aria-label="文法邏輯">
     <div id="grammar-area"></div>
   </section>
 
@@ -903,6 +944,294 @@ function saveIdioms(v){ localStorage.setItem(LS_IDIOMS, JSON.stringify(v)); }
 
 let idioms = loadIdioms();
 
+/* ---------- 50音（平假名・片假名） ---------- */
+const LS_KANA_QUIZ = 'jl_kana_quiz';
+
+const HIRAGANA = {
+  seion: [
+    [['あ','a'],['い','i'],['う','u'],['え','e'],['お','o']],
+    [['か','ka'],['き','ki'],['く','ku'],['け','ke'],['こ','ko']],
+    [['さ','sa'],['し','shi'],['す','su'],['せ','se'],['そ','so']],
+    [['た','ta'],['ち','chi'],['つ','tsu'],['て','te'],['と','to']],
+    [['な','na'],['に','ni'],['ぬ','nu'],['ね','ne'],['の','no']],
+    [['は','ha'],['ひ','hi'],['ふ','fu'],['へ','he'],['ほ','ho']],
+    [['ま','ma'],['み','mi'],['む','mu'],['め','me'],['も','mo']],
+    [['や','ya'],null,['ゆ','yu'],null,['よ','yo']],
+    [['ら','ra'],['り','ri'],['る','ru'],['れ','re'],['ろ','ro']],
+    [['わ','wa'],null,null,null,['を','wo']],
+    [['ん','n'],null,null,null,null]
+  ],
+  dakuten: [
+    [['が','ga'],['ぎ','gi'],['ぐ','gu'],['げ','ge'],['ご','go']],
+    [['ざ','za'],['じ','ji'],['ず','zu'],['ぜ','ze'],['ぞ','zo']],
+    [['だ','da'],['ぢ','ji'],['づ','zu'],['で','de'],['ど','do']],
+    [['ば','ba'],['び','bi'],['ぶ','bu'],['べ','be'],['ぼ','bo']]
+  ],
+  handakuten: [
+    [['ぱ','pa'],['ぴ','pi'],['ぷ','pu'],['ぺ','pe'],['ぽ','po']]
+  ],
+  youon: [
+    [['きゃ','kya'],['きゅ','kyu'],['きょ','kyo']],
+    [['しゃ','sha'],['しゅ','shu'],['しょ','sho']],
+    [['ちゃ','cha'],['ちゅ','chu'],['ちょ','cho']],
+    [['にゃ','nya'],['にゅ','nyu'],['にょ','nyo']],
+    [['ひゃ','hya'],['ひゅ','hyu'],['ひょ','hyo']],
+    [['みゃ','mya'],['みゅ','myu'],['みょ','myo']],
+    [['りゃ','rya'],['りゅ','ryu'],['りょ','ryo']],
+    [['ぎゃ','gya'],['ぎゅ','gyu'],['ぎょ','gyo']],
+    [['じゃ','ja'],['じゅ','ju'],['じょ','jo']],
+    [['びゃ','bya'],['びゅ','byu'],['びょ','byo']],
+    [['ぴゃ','pya'],['ぴゅ','pyu'],['ぴょ','pyo']]
+  ]
+};
+
+const KATAKANA = {
+  seion: [
+    [['ア','a'],['イ','i'],['ウ','u'],['エ','e'],['オ','o']],
+    [['カ','ka'],['キ','ki'],['ク','ku'],['ケ','ke'],['コ','ko']],
+    [['サ','sa'],['シ','shi'],['ス','su'],['セ','se'],['ソ','so']],
+    [['タ','ta'],['チ','chi'],['ツ','tsu'],['テ','te'],['ト','to']],
+    [['ナ','na'],['ニ','ni'],['ヌ','nu'],['ネ','ne'],['ノ','no']],
+    [['ハ','ha'],['ヒ','hi'],['フ','fu'],['ヘ','he'],['ホ','ho']],
+    [['マ','ma'],['ミ','mi'],['ム','mu'],['メ','me'],['モ','mo']],
+    [['ヤ','ya'],null,['ユ','yu'],null,['ヨ','yo']],
+    [['ラ','ra'],['リ','ri'],['ル','ru'],['レ','re'],['ロ','ro']],
+    [['ワ','wa'],null,null,null,['ヲ','wo']],
+    [['ン','n'],null,null,null,null]
+  ],
+  dakuten: [
+    [['ガ','ga'],['ギ','gi'],['グ','gu'],['ゲ','ge'],['ゴ','go']],
+    [['ザ','za'],['ジ','ji'],['ズ','zu'],['ゼ','ze'],['ゾ','zo']],
+    [['ダ','da'],['ヂ','ji'],['ヅ','zu'],['デ','de'],['ド','do']],
+    [['バ','ba'],['ビ','bi'],['ブ','bu'],['ベ','be'],['ボ','bo']]
+  ],
+  handakuten: [
+    [['パ','pa'],['ピ','pi'],['プ','pu'],['ペ','pe'],['ポ','po']]
+  ],
+  youon: [
+    [['キャ','kya'],['キュ','kyu'],['キョ','kyo']],
+    [['シャ','sha'],['シュ','shu'],['ショ','sho']],
+    [['チャ','cha'],['チュ','chu'],['チョ','cho']],
+    [['ニャ','nya'],['ニュ','nyu'],['ニョ','nyo']],
+    [['ヒャ','hya'],['ヒュ','hyu'],['ヒョ','hyo']],
+    [['ミャ','mya'],['ミュ','myu'],['ミョ','myo']],
+    [['リャ','rya'],['リュ','ryu'],['リョ','ryo']],
+    [['ギャ','gya'],['ギュ','gyu'],['ギョ','gyo']],
+    [['ジャ','ja'],['ジュ','ju'],['ジョ','jo']],
+    [['ビャ','bya'],['ビュ','byu'],['ビョ','byo']],
+    [['ピャ','pya'],['ピュ','pyu'],['ピョ','pyo']]
+  ]
+};
+
+function flattenKana(kanaData, prefix){
+  const list = [];
+  let i = 0;
+  ['seion','dakuten','handakuten','youon'].forEach(group=>{
+    kanaData[group].forEach(row=>{
+      row.forEach(cell=>{
+        if(cell) list.push({ id:prefix+'-'+(i++), jp:cell[0], meanings:[{zh:cell[1]}] });
+      });
+    });
+  });
+  return list;
+}
+const HIRAGANA_WORDS = flattenKana(HIRAGANA, 'h');
+const KATAKANA_WORDS = flattenKana(KATAKANA, 'k');
+
+let kanaScript = 'hiragana'; // 'hiragana' | 'katakana'，圖表和測驗共用同一個目前選擇的文字系統
+
+function renderKanaGrid(rows, cols){
+  return `<div class="kana-grid" style="grid-template-columns:repeat(${cols},1fr);">
+    ${rows.map(row=>row.map(cell=>{
+      if(!cell) return `<div class="kana-cell kana-cell-empty" aria-hidden="true"></div>`;
+      const [kana, romaji] = cell;
+      return `<button type="button" class="kana-cell" data-speak="${esc(kana)}" aria-label="${esc(kana)}，讀音 ${esc(romaji)}，點擊播放發音">
+        <span class="kana-glyph" lang="ja">${esc(kana)}</span><span class="kana-romaji">${esc(romaji)}</span>
+      </button>`;
+    }).join('')).join('')}
+  </div>`;
+}
+
+function renderKanaChart(){
+  const area = document.getElementById('kana-chart-area');
+  const data = kanaScript === 'hiragana' ? HIRAGANA : KATAKANA;
+  area.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div style="font-family:var(--serif);font-size:1.4rem;font-weight:600;margin-bottom:6px;">50音圖表</div>
+      <div class="sub" style="margin:0;">依「行」（子音）分列、依「段」（母音 a/i/u/e/o）分欄，看規律不用死背</div>
+      <div class="btn-row" style="justify-content:center;margin-top:10px;">
+        <button class="action ${kanaScript==='hiragana'?'btn-primary':'btn-ghost'}" id="script-hira">ひらがな</button>
+        <button class="action ${kanaScript==='katakana'?'btn-primary':'btn-ghost'}" id="script-kata">カタカナ</button>
+      </div>
+    </div>
+    <div class="card"><h3>清音</h3>${renderKanaGrid(data.seion,5)}</div>
+    <div class="card"><h3>濁音</h3>${renderKanaGrid(data.dakuten,5)}</div>
+    <div class="card"><h3>半濁音</h3>${renderKanaGrid(data.handakuten,5)}</div>
+    <div class="card"><h3>拗音</h3>${renderKanaGrid(data.youon,3)}</div>
+  `;
+  document.getElementById('script-hira').addEventListener('click', ()=>{ kanaScript='hiragana'; renderKanaChart(); });
+  document.getElementById('script-kata').addEventListener('click', ()=>{ kanaScript='katakana'; renderKanaChart(); });
+  area.querySelectorAll('[data-speak]').forEach(btn=>{
+    btn.addEventListener('click', ()=> speak(btn.dataset.speak));
+  });
+}
+
+const kanaQuiz = makeQuizController({
+  getData: ()=> kanaScript==='hiragana' ? HIRAGANA_WORDS : KATAKANA_WORDS,
+  areaId:'kana-quiz-inner',
+  historyKey:LS_KANA_QUIZ,
+  questionFn: w => `<span lang="ja" style="font-size:1.6rem;">${esc(w.jp)}</span> 的羅馬拼音是？`
+});
+
+function renderKanaQuiz(){
+  const area = document.getElementById('kana-quiz-area');
+  area.innerHTML = `
+    <div class="btn-row" style="margin-bottom:14px;">
+      <button class="action ${kanaScript==='hiragana'?'btn-primary':'btn-ghost'}" id="kquiz-hira">ひらがな</button>
+      <button class="action ${kanaScript==='katakana'?'btn-primary':'btn-ghost'}" id="kquiz-kata">カタカナ</button>
+    </div>
+    <div id="kana-quiz-inner"></div>
+  `;
+  document.getElementById('kquiz-hira').addEventListener('click', ()=>{ kanaScript='hiragana'; renderKanaQuiz(); });
+  document.getElementById('kquiz-kata').addEventListener('click', ()=>{ kanaScript='katakana'; renderKanaQuiz(); });
+  kanaQuiz.render();
+}
+
+/* ---------- 日語基礎訓練（獨立支線：招呼語・數字・自我介紹） ---------- */
+const LS_BASICS = 'jl_basics';
+const LS_BASICS_QUIZ = 'jl_basics_quiz';
+
+const BASICS_SEED = [
+  { jp:"おはようございます", kana:"おはようございます", romaji:"ohayou gozaimasu", zh:"早安（正式）", pos:"招呼語", emoji:"🌅",
+    example:"先生、おはようございます。", exampleZh:"老師，早安。",
+    phonicsNote:"這是早上見面時最正式的問候語，對朋友可以省略成「おはよう」，但對老師、主管或不熟的人要講完整版，省略與否代表禮貌程度的差異。" },
+  { jp:"こんにちは", kana:"こんにちは", romaji:"konnichiwa", zh:"你好、午安", pos:"招呼語", emoji:"👋",
+    example:"こんにちは、お元気ですか。", exampleZh:"你好，你好嗎？",
+    phonicsNote:"字尾的「は」在這裡當助詞唸成 wa，不是唸成 ha，這是historical用法保留下來的例外，要特別記住。" },
+  { jp:"こんばんは", kana:"こんばんは", romaji:"konbanwa", zh:"晚安（見面問候）", pos:"招呼語", emoji:"🌙",
+    example:"こんばんは、いい天気ですね。", exampleZh:"晚安，今天天氣真好呢。",
+    phonicsNote:"注意這是「晚上見面時」的問候語，跟睡前道別的「おやすみなさい」功能完全不同，中文都翻成「晚安」容易搞混。" },
+  { jp:"ありがとうございます", kana:"ありがとうございます", romaji:"arigatou gozaimasu", zh:"謝謝（正式）", pos:"招呼語", emoji:"🙏",
+    example:"手伝ってくれて、ありがとうございます。", exampleZh:"謝謝你的幫忙。",
+    phonicsNote:"對朋友可簡化成「ありがとう」，過去式「ありがとうございました」則用在事情已經結束、事後道謝的情境，時態差異會改變語感。" },
+  { jp:"すみません", kana:"すみません", romaji:"sumimasen", zh:"不好意思、抱歉、借過", pos:"招呼語", emoji:"🙇",
+    example:"すみません、駅はどこですか。", exampleZh:"不好意思，請問車站在哪裡？",
+    phonicsNote:"這是萬用詞：可以用來道歉、引起別人注意（像叫服務生）、或表達輕微的感謝，實際意思要靠情境判斷，不是單一固定翻譯。" },
+  { jp:"はじめまして", kana:"はじめまして", romaji:"hajimemashite", zh:"初次見面、幸會", pos:"招呼語", emoji:"🤝",
+    example:"はじめまして、田中です。", exampleZh:"初次見面，我是田中。",
+    phonicsNote:"這個詞只能在真正第一次見面時使用，第二次見面就不能再說はじめまして了，這點跟中文「幸會」用法邏輯上很接近。" },
+  { jp:"さようなら", kana:"さようなら", romaji:"sayounara", zh:"再見（較正式、較長久的告別）", pos:"招呼語", emoji:"👋",
+    example:"それでは、さようなら。", exampleZh:"那麼，再見了。",
+    phonicsNote:"語感比較正式、甚至帶點「可能很久不見」的味道，朋友間日常道別更常用「じゃあね」或「またね」，不要每次道別都用這句。" },
+  { jp:"おやすみなさい", kana:"おやすみなさい", romaji:"oyasuminasai", zh:"晚安（睡前道別）", pos:"招呼語", emoji:"😴",
+    example:"もう遅いから、おやすみなさい。", exampleZh:"已經很晚了，晚安。",
+    phonicsNote:"專門用在睡前或深夜道別時，和見面時用的「こんばんは」是完全不同的場合，不能互相替換。" },
+  { jp:"いただきます", kana:"いただきます", romaji:"itadakimasu", zh:"開動了", pos:"招呼語", emoji:"🍚",
+    example:"みんなで、いただきます。", exampleZh:"大家一起，開動了。",
+    phonicsNote:"用餐前的固定用語，帶有對食物、對準備餐點的人表達感謝的語感，不是單純「我要開始吃了」的宣告而已。" },
+  { jp:"ごちそうさまでした", kana:"ごちそうさまでした", romaji:"gochisousama deshita", zh:"謝謝款待、我吃飽了", pos:"招呼語", emoji:"🍽️",
+    example:"美味しかったです。ごちそうさまでした。", exampleZh:"很好吃，謝謝款待。",
+    kanjiBreakdown:"馳走（奔走張羅食材，引申為款待）+さま（尊稱）＝對準備餐點這件事表達敬意與感謝",
+    phonicsNote:"用餐後的固定用語，和いただきます前後呼應，一頭一尾都在對食物和準備的人表達感謝，這是日本飲食文化很核心的禮貌習慣。" },
+  { jp:"一", kana:"いち", romaji:"ichi", zh:"1（數字）", pos:"數字", emoji:"1️⃣",
+    example:"一時に会いましょう。", exampleZh:"我們一點見面吧。",
+    phonicsNote:"いち是「一」最基本、最常用的唸法，在數數、報時、講電話號碼時都用這個唸法。" },
+  { jp:"二", kana:"に", romaji:"ni", zh:"2（數字）", pos:"數字", emoji:"2️⃣",
+    example:"二時に授業があります。", exampleZh:"兩點有課。",
+    phonicsNote:"に的發音只有一拍，很短，唸的時候不要拖長，否則容易跟語感不同的字混淆。" },
+  { jp:"三", kana:"さん", romaji:"san", zh:"3（數字）", pos:"數字", emoji:"3️⃣",
+    example:"三時に来てください。", exampleZh:"請三點過來。",
+    phonicsNote:"さん的ん是撥音，要用鼻腔延長一拍，唸完整兩拍（さ・ん），不要只唸成一拍的さ。" },
+  { jp:"四", kana:"よん／し", romaji:"yon / shi", zh:"4（數字，有兩種唸法）", pos:"數字", emoji:"4️⃣",
+    example:"りんごを四つ買いました。", exampleZh:"我買了四個蘋果。",
+    phonicsNote:"這是日文數字裡最需要注意情境的一個：し因為和「死」同音，在醫院房號、電梯樓層等場合常被刻意避開，日常數數、算數量時則普遍用よん，兩種唸法都要會聽會用，但要知道情境差異。" },
+  { jp:"五", kana:"ご", romaji:"go", zh:"5（數字）", pos:"數字", emoji:"5️⃣",
+    example:"五時に帰ります。", exampleZh:"我五點回家。",
+    phonicsNote:"ご是濁音，發音時聲帶要振動，和清音「こ」的差別在有沒有振動聲帶。" },
+  { jp:"六", kana:"ろく", romaji:"roku", zh:"6（數字）", pos:"數字", emoji:"6️⃣",
+    example:"六時に起きます。", exampleZh:"我六點起床。",
+    phonicsNote:"ろく兩個音節平平地唸，沒有特別需要拉長或停頓的地方。" },
+  { jp:"七", kana:"なな／しち", romaji:"nana / shichi", zh:"7（數字，有兩種唸法）", pos:"數字", emoji:"7️⃣",
+    example:"七つの星が見えます。", exampleZh:"可以看到七顆星星。",
+    phonicsNote:"しち的發音和「一（いち）」很接近，容易在電話裡聽錯，所以日常口語數數時なな更常被使用，しち則常見於「七月（しちがつ）」這類固定詞彙裡。" },
+  { jp:"八", kana:"はち", romaji:"hachi", zh:"8（數字）", pos:"數字", emoji:"8️⃣",
+    example:"八時に寝ます。", exampleZh:"我八點睡覺。",
+    phonicsNote:"はち的ち是け段音變化出的清音，發音短促，不要拖長。" },
+  { jp:"九", kana:"きゅう／く", romaji:"kyuu / ku", zh:"9（數字，有兩種唸法）", pos:"數字", emoji:"9️⃣",
+    example:"九時から九時まで勉強します。", exampleZh:"我從九點讀書到九點。",
+    phonicsNote:"く這個唸法主要保留在少數固定詞彙裡（例如「九時（くじ）」報時），一般數數量時幾乎都用きゅう，兩種唸法使用場合不同，不是隨意二選一。" },
+  { jp:"十", kana:"じゅう", romaji:"juu", zh:"10（數字）", pos:"數字", emoji:"🔟",
+    example:"十時に会議があります。", exampleZh:"十點有會議。",
+    phonicsNote:"じゅう是拗音加長音的組合，じゅ算一拍、う再拉長一拍，整體是兩拍，不要唸成三個分開的音。" },
+  { jp:"私は〇〇です", kana:"わたしは〇〇です", romaji:"watashi wa __ desu", zh:"我是〇〇（自我介紹用）", pos:"自我介紹句型", emoji:"🙋",
+    example:"私は小封です。", exampleZh:"我是小封。",
+    phonicsNote:"這裡的は是助詞，唸wa不唸ha；は在這句裡的功能是把「私」設定成話題（呼應は的主題邏輯），です則是丁寧語的句尾，讓整句話顯得禮貌、正式。" },
+  { jp:"〇〇から来ました", kana:"〇〇からきました", romaji:"__ kara kimashita", zh:"我來自〇〇", pos:"自我介紹句型", emoji:"✈️",
+    example:"台湾から来ました。", exampleZh:"我來自台灣。",
+    phonicsNote:"から標記「起點」，邏輯上跟に（標記終點/目的地）是一組相對的助詞：から是出發的地方，に／へ是抵達的方向。" },
+  { jp:"〇〇に住んでいます", kana:"〇〇にすんでいます", romaji:"__ ni sunde imasu", zh:"我住在〇〇", pos:"自我介紹句型", emoji:"🏠",
+    example:"台北に住んでいます。", exampleZh:"我住在台北。",
+    phonicsNote:"に在這裡標記「存在的位置點」，跟第三章を・に・で・へ的邏輯一致：に是一個點，這裡指的是「居住」這個狀態所在的那個點。" },
+  { jp:"どうぞよろしくお願いします", kana:"どうぞよろしくおねがいします", romaji:"douzo yoroshiku onegaishimasu", zh:"請多指教", pos:"自我介紹句型", emoji:"🤲",
+    example:"はじめまして。どうぞよろしくお願いします。", exampleZh:"初次見面，請多指教。",
+    kanjiBreakdown:"願（願望、請求）+します（する的丁寧體）＝表達「請求對方今後多多照顧、指教」的心意",
+    phonicsNote:"這句話沒有辦法直接逐字翻成中文，它的功能是在自我介紹的最後，禮貌地建立起「今後請多關照」的關係，是社交場合固定的收尾語，不用糾結字面意思，記住使用時機即可。" },
+  { jp:"〇〇歳です", kana:"〇〇さいです", romaji:"__ sai desu", zh:"我〇〇歲", pos:"自我介紹句型", emoji:"🎂",
+    example:"二十歳です。", exampleZh:"我二十歲。",
+    kanjiBreakdown:"歳是計算年齡的助数詞（呼應助数詞邏輯章節：依類別選對應的量詞，歳專門用來數歲數）",
+    phonicsNote:"「二十歳」唸作はたち，是特殊的固定唸法，不是二＋十＋歳分開唸，這點要單獨記住，不能套用一般數字的拼法規則。" },
+  { jp:"趣味は〇〇です", kana:"しゅみは〇〇です", romaji:"shumi wa __ desu", zh:"我的興趣是〇〇", pos:"自我介紹句型", emoji:"🎨",
+    example:"趣味はサッカーです。", exampleZh:"我的興趣是足球。",
+    phonicsNote:"這裡的は同樣是主題助詞，把「趣味」設成話題，後面用です簡潔地說明內容，是自我介紹裡最常見的句型結構之一。" }
+];
+
+function seedBasics(s, i){
+  return {
+    id:'bs'+Date.now()+i, jp:s.jp, kana:s.kana||'', romaji:s.romaji||'', pos:s.pos||'', emoji:s.emoji||'',
+    image:'', credit:'', creditUrl:'',
+    kanjiBreakdown:s.kanjiBreakdown||'', phonicsNote:s.phonicsNote||'',
+    meanings:[{zh:s.zh, example:s.example||'', exampleZh:s.exampleZh||''}],
+    box:1, nextReview: todayStr()
+  };
+}
+
+function loadBasics(){
+  let v = JSON.parse(localStorage.getItem(LS_BASICS) || 'null');
+  if(!v){
+    v = BASICS_SEED.map(seedBasics);
+    saveBasics(v);
+  }
+  return v;
+}
+function saveBasics(v){ localStorage.setItem(LS_BASICS, JSON.stringify(v)); }
+
+let basics = loadBasics();
+
+const basicsDeck = makeFlashDeck({ getData:()=>basics, saveData:saveBasics, areaId:'basics-flash-area', prefix:'bs' });
+const basicsQuiz = makeQuizController({ getData:()=>basics, areaId:'basics-quiz-area', historyKey:LS_BASICS_QUIZ });
+
+/* ---------- 50音・基礎訓練 分頁的子分頁切換 ---------- */
+function renderKana(){
+  const active = document.querySelector('.kana-subtab.active').dataset.kanaTab;
+  if(active==='chart') renderKanaChart();
+  else if(active==='kquiz') renderKanaQuiz();
+  else if(active==='basics-flash') basicsDeck.render();
+  else if(active==='basics-quiz') basicsQuiz.render();
+}
+
+document.querySelectorAll('.kana-subtab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.kana-subtab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.kanaTab;
+    document.getElementById('kana-chart-area').style.display = tab==='chart' ? '' : 'none';
+    document.getElementById('kana-quiz-area').style.display = tab==='kquiz' ? '' : 'none';
+    document.getElementById('basics-flash-area').style.display = tab==='basics-flash' ? '' : 'none';
+    document.getElementById('basics-quiz-area').style.display = tab==='basics-quiz' ? '' : 'none';
+    renderKana();
+  });
+});
+
 /* ---------- TAB SWITCHING ---------- */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -911,6 +1240,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.classList.add('active');
     btn.setAttribute('aria-selected','true');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='kana') renderKana();
     if(btn.dataset.tab==='grammar') renderGrammar();
     if(btn.dataset.tab==='flash') renderFlash();
     if(btn.dataset.tab==='quiz') renderQuiz();
@@ -1143,8 +1473,8 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
   return { render };
 }
 
-/* ---------- 通用小測驗控制器（主單字庫 / 慣用句支線共用） ---------- */
-function makeQuizController({ getData, areaId, historyKey }){
+/* ---------- 通用小測驗控制器（主單字庫 / 慣用句支線 / 50音 / 基礎會話共用） ---------- */
+function makeQuizController({ getData, areaId, historyKey, questionFn }){
   let state = null;
 
   function render(){
@@ -1189,9 +1519,10 @@ function makeQuizController({ getData, areaId, historyKey }){
       return;
     }
     const q = state.questions[state.qIndex];
+    const qText = questionFn ? questionFn(q.word) : `${esc(q.word.jp)} 的意思是？`;
     area.innerHTML = `
       <div class="sub">題目 ${state.qIndex+1} / ${state.questions.length}　・　目前得分 ${state.correct}</div>
-      <div class="quiz-q" lang="ja">${esc(q.word.jp)} 的意思是？</div>
+      <div class="quiz-q" lang="ja">${qText}</div>
       <div id="opts-${areaId}"></div>
     `;
     const optsEl = document.getElementById(`opts-${areaId}`);
@@ -1747,8 +2078,21 @@ function renderProgress(){
       : '尚未作答';
 
     const idiomMastered = idioms.filter(w=>w.box>=5).length;
+    const basicsMastered = basics.filter(w=>w.box>=5).length;
+    const kanaQuizHistory = JSON.parse(localStorage.getItem(LS_KANA_QUIZ) || '[]');
+    const kanaQuizText = kanaQuizHistory.length
+      ? `平均 ${Math.round(kanaQuizHistory.slice(0,10).reduce((s,h)=>s+h.score/h.total,0)/Math.min(10,kanaQuizHistory.length)*100)}%`
+      : '尚未測驗';
 
     modulesEl.innerHTML = `
+      <div class="word-item">
+        <div class="info"><b>50音</b><span>假名測驗紀錄</span></div>
+        <div style="color:var(--ink-soft);font-size:0.85rem;">${kanaQuizText}</div>
+      </div>
+      <div class="word-item">
+        <div class="info"><b>日語基礎訓練</b><span>已熟練 ${basicsMastered} / ${basics.length} 項</span></div>
+        <div></div>
+      </div>
       <div class="word-item">
         <div class="info"><b>文法邏輯</b><span>已讀 ${grammarRead} / ${GRAMMAR.length} 章</span></div>
         <div style="color:var(--ink-soft);font-size:0.85rem;">${grammarQuizText}</div>
@@ -1960,6 +2304,9 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     idiomQuizHistory: JSON.parse(localStorage.getItem(LS_IDIOM_QUIZ) || '[]'),
     readingProgress: loadReadingProgress(),
     grammarProgress: loadGrammarProgress(),
+    basics: basics,
+    basicsQuizHistory: JSON.parse(localStorage.getItem(LS_BASICS_QUIZ) || '[]'),
+    kanaQuizHistory: JSON.parse(localStorage.getItem(LS_KANA_QUIZ) || '[]'),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -1999,6 +2346,12 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       if(data.idiomQuizHistory) localStorage.setItem(LS_IDIOM_QUIZ, JSON.stringify(data.idiomQuizHistory));
       if(data.readingProgress) saveReadingProgress(data.readingProgress);
       if(data.grammarProgress) saveGrammarProgress(data.grammarProgress);
+      if(Array.isArray(data.basics) && data.basics.every(w=>w && typeof w.jp==='string' && Array.isArray(w.meanings))){
+        basics = data.basics;
+        saveBasics(basics);
+      }
+      if(data.basicsQuizHistory) localStorage.setItem(LS_BASICS_QUIZ, JSON.stringify(data.basicsQuizHistory));
+      if(data.kanaQuizHistory) localStorage.setItem(LS_KANA_QUIZ, JSON.stringify(data.kanaQuizHistory));
       resetForm();
       renderManage();
       alert('匯入完成！');
@@ -2019,7 +2372,7 @@ document.getElementById('voice-test-btn').addEventListener('click', ()=>{
 });
 
 /* ---------- INIT ---------- */
-renderGrammar();
+renderKana();
 </script>
 
 </body>
