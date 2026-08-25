@@ -95,6 +95,7 @@
     overflow-x:auto;
   }
   nav button{
+    position:relative;
     border:none;
     background:none;
     padding:10px 16px;
@@ -105,6 +106,20 @@
     border-radius:11px;
     white-space:nowrap;
     transition:background .18s ease, color .18s ease, box-shadow .18s ease;
+  }
+  .tab-badge{
+    position:absolute;
+    top:2px;
+    right:2px;
+    background:var(--bad);
+    color:#fff;
+    font-size:0.62rem;
+    font-weight:700;
+    min-width:16px;
+    height:16px;
+    line-height:16px;
+    border-radius:8px;
+    padding:0 4px;
   }
   nav button:hover{ color:var(--accent); }
   nav button.active{
@@ -530,10 +545,77 @@
     .heatmap{ grid-template-columns:repeat(10,1fr); }
     .kana-cell{ padding:8px 2px; }
     .kana-glyph{ font-size:1.1rem; }
+    .celebration-toast{ left:12px; right:12px; transform:translateY(-20px); max-width:none; }
+    .celebration-toast.show{ transform:translateY(0); }
+  }
+
+  /* 每日目標 */
+  .daily-goal-card{
+    margin-top:14px;
+    padding:14px 18px;
+  }
+  .daily-goal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .daily-goal-track{
+    background:var(--accent-soft);
+    border-radius:20px;
+    height:10px;
+    overflow:hidden;
+  }
+  .daily-goal-bar{
+    background:var(--accent);
+    height:100%;
+    width:0%;
+    transition:width .3s ease;
+  }
+
+  /* 慶祝提示 */
+  .celebration-toast{
+    position:fixed;
+    top:16px;
+    left:50%;
+    max-width:min(90vw,360px);
+    transform:translateX(-50%) translateY(-20px);
+    background:var(--card);
+    border:1px solid var(--accent);
+    color:var(--accent-2);
+    padding:12px 22px;
+    border-radius:14px;
+    box-shadow:var(--shadow-lg);
+    font-weight:700;
+    font-family:var(--serif);
+    font-size:1.02rem;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    z-index:1000;
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .celebration-toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+    animation:celebrate-pop .5s ease;
+  }
+  @keyframes celebrate-pop{
+    0%{ transform:translateX(-50%) translateY(-20px) scale(0.85); }
+    60%{ transform:translateX(-50%) translateY(4px) scale(1.05); }
+    100%{ transform:translateX(-50%) translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .celebration-toast{ transition:opacity .2s ease; }
+    .celebration-toast.show{ animation:none; transform:translateX(-50%) translateY(0); }
   }
 </style>
 </head>
 <body>
+
+<div id="celebration-toast" class="celebration-toast" role="status" aria-live="polite"></div>
 
 <header>
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
@@ -541,9 +623,21 @@
       <h1>📚 我的日文學習程式</h1>
       <div class="sub" style="margin-bottom:0;">50音・基礎訓練 ・ 文法邏輯 ・ 單字卡複習 ・ 小測驗 ・ 學習進度</div>
     </div>
-    <a href="https://he0136480-prog.github.io/fictional-adventure/" style="text-decoration:none;flex-shrink:0;">
-      <span class="pos-tag" style="margin:0;font-size:0.78rem;padding:6px 14px;">🇺🇸 切換到英文版 →</span>
-    </a>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <button class="icon-btn" id="slow-toggle-btn" aria-label="切換慢速發音" aria-pressed="false" title="切換慢速發音" style="width:34px;height:34px;font-size:1rem;">🐢</button>
+      <a href="https://he0136480-prog.github.io/fictional-adventure/" style="text-decoration:none;">
+        <span class="pos-tag" style="margin:0;font-size:0.78rem;padding:6px 14px;">🇺🇸 切換到英文版 →</span>
+      </a>
+    </div>
+  </div>
+  <div class="card daily-goal-card">
+    <div class="daily-goal-head">
+      <span>🎯 今日目標</span>
+      <span id="daily-goal-text">0 / 10</span>
+    </div>
+    <div class="daily-goal-track" id="daily-goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-label="今日學習目標進度">
+      <div class="daily-goal-bar" id="daily-goal-bar"></div>
+    </div>
   </div>
 </header>
 
@@ -592,6 +686,10 @@
 
   <!-- QUIZ -->
   <section class="panel" id="panel-quiz" role="tabpanel" aria-label="小測驗">
+    <div class="btn-row" style="margin-bottom:14px;">
+      <button class="action btn-primary" id="quiz-mode-normal" aria-pressed="true">📖 一般模式（看字選意思）</button>
+      <button class="action btn-ghost" id="quiz-mode-listen" aria-pressed="false">🎧 聽力模式（聽發音選意思）</button>
+    </div>
     <div class="card" id="quiz-area"></div>
   </section>
 
@@ -1307,6 +1405,18 @@ function pickJapaneseVoice(){
   return null;
 }
 
+const LS_SLOW = 'jl_slow_speak';
+let slowSpeak = localStorage.getItem(LS_SLOW) === '1';
+
+function updateSlowBtn(){
+  const btn = document.getElementById('slow-toggle-btn');
+  if(!btn) return;
+  btn.setAttribute('aria-pressed', String(slowSpeak));
+  btn.style.background = slowSpeak ? 'var(--accent)' : 'var(--accent-soft)';
+  btn.style.color = slowSpeak ? '#fff' : 'var(--accent)';
+  btn.title = slowSpeak ? '慢速發音已開啟（點擊切回正常速度）' : '切換慢速發音';
+}
+
 function speak(text){
   if(!('speechSynthesis' in window)){
     alert('你的瀏覽器不支援語音播放功能，建議改用 Chrome 或 Safari 最新版。');
@@ -1315,7 +1425,7 @@ function speak(text){
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ja-JP';
-  u.rate = 0.85;
+  u.rate = slowSpeak ? 0.55 : 0.85;
   const voice = pickJapaneseVoice();
   if(voice) u.voice = voice;
   window.speechSynthesis.speak(u);
@@ -1326,6 +1436,25 @@ const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRec
 
 function normalizeJp(s){
   return String(s||'').trim().replace(/[\s。、！？.,!?]/g,'');
+}
+
+// 瀏覽器語音辨識沒有真正的音素分析能力，這裡只能用字元長度/位置做粗略的啟發式提示，不是精準的發音學判斷
+function diagnosePronunciation(target, heard){
+  if(!target || !heard) return '';
+  if(heard.length < target.length){
+    if(target.includes('っ')) return '可能漏掉了促音「っ」，記得停頓一拍再送出下一個音。';
+    if(/(.)\1/.test(target)) return '可能漏掉了長音，記得母音要多拉長一拍。';
+    return '聽起來比正確發音短，可能有音節被吃掉了，放慢速度再念一次看看。';
+  }
+  if(heard.length > target.length){
+    return '聽起來比正確發音長，可能多念了一個音，或某個音拖太長。';
+  }
+  for(let i=0;i<target.length;i++){
+    if(target[i] !== heard[i]){
+      return `第 ${i+1} 個音（${target[i]}）聽起來不太準，對照發音原理說明再試一次。`;
+    }
+  }
+  return '';
 }
 
 function checkPronunciation(word, micBtnId, resultBoxId){
@@ -1350,9 +1479,14 @@ function checkPronunciation(word, micBtnId, resultBoxId){
     const alternatives = Array.from(event.results[0]).map(r=>normalizeJp(r.transcript));
     const matched = alternatives.some(a => targets.includes(a));
     const shown = Array.from(event.results[0])[0].transcript.trim();
-    resultBox.innerHTML = matched
-      ? `<div class="pron-result ok">✅ 發音正確！（辨識結果：${esc(shown)}）</div>`
-      : `<div class="pron-result bad">🔁 再試一次！（辨識結果：${esc(shown) || '（沒聽清楚）'}）</div>`;
+    if(matched){
+      resultBox.innerHTML = `<div class="pron-result ok">✅ 發音正確！（辨識結果：${esc(shown)}）</div>`;
+      incrementDailyCount();
+    } else {
+      const target = normalizeJp(word.kana) || normalizeJp(word.jp);
+      const hint = diagnosePronunciation(target, normalizeJp(shown));
+      resultBox.innerHTML = `<div class="pron-result bad">🔁 再試一次！（辨識結果：${esc(shown) || '（沒聽清楚）'}）${hint ? `<div style="margin-top:6px;font-size:0.85rem;">💡 ${esc(hint)}</div>` : ''}</div>`;
+    }
   };
   recognition.onerror = ()=>{
     resultBox.innerHTML = `<div class="pron-result bad">沒有偵測到聲音，請確認麥克風權限後再試一次</div>`;
@@ -1361,6 +1495,74 @@ function checkPronunciation(word, micBtnId, resultBoxId){
     micBtn.classList.remove('listening');
   };
   recognition.start();
+}
+
+/* ---------- 每日目標 + 慶祝回饋 ---------- */
+const LS_DAILY_COUNT = 'jl_daily_count';
+const DAILY_GOAL = 10;
+
+function loadDailyCount(){
+  const d = JSON.parse(localStorage.getItem(LS_DAILY_COUNT) || 'null');
+  if(!d || d.date !== todayStr()) return { date: todayStr(), count:0, celebrated:false };
+  return d;
+}
+function saveDailyCount(d){ localStorage.setItem(LS_DAILY_COUNT, JSON.stringify(d)); }
+
+function showCelebration(text){
+  const el = document.getElementById('celebration-toast');
+  if(!el) return;
+  el.textContent = text;
+  el.classList.remove('show');
+  void el.offsetWidth; // 重新觸發動畫
+  el.classList.add('show');
+  clearTimeout(showCelebration._t);
+  showCelebration._t = setTimeout(()=>{ el.classList.remove('show'); }, 3000);
+}
+
+function renderDailyGoal(){
+  const d = loadDailyCount();
+  const shown = Math.min(d.count, DAILY_GOAL);
+  const pct = Math.round(shown / DAILY_GOAL * 100);
+  const textEl = document.getElementById('daily-goal-text');
+  const barEl = document.getElementById('daily-goal-bar');
+  const trackEl = document.getElementById('daily-goal-track');
+  if(textEl) textEl.textContent = `${shown} / ${DAILY_GOAL}`;
+  if(barEl) barEl.style.width = pct + '%';
+  if(trackEl) trackEl.setAttribute('aria-valuenow', String(shown));
+}
+
+function incrementDailyCount(){
+  const d = loadDailyCount();
+  d.count++;
+  const justReached = d.count >= DAILY_GOAL && !d.celebrated;
+  if(justReached) d.celebrated = true;
+  saveDailyCount(d);
+  renderDailyGoal();
+  if(justReached) showCelebration('🎉 今日目標達成！太棒了！');
+}
+
+/* ---------- Nav 分頁複習到期角標 ---------- */
+function updateNavBadges(){
+  const today = todayStr();
+  const counts = {
+    flash: vocab.filter(w=>w.nextReview<=today).length,
+    idioms: idioms.filter(w=>w.nextReview<=today).length,
+    kana: basics.filter(w=>w.nextReview<=today).length
+  };
+  Object.entries(counts).forEach(([tab,count])=>{
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if(!btn) return;
+    if(!btn.dataset.baseLabel) btn.dataset.baseLabel = btn.textContent.trim();
+    let badge = btn.querySelector('.tab-badge');
+    if(count > 0){
+      if(!badge){ badge = document.createElement('span'); badge.className = 'tab-badge'; badge.setAttribute('aria-hidden','true'); btn.appendChild(badge); }
+      badge.textContent = count > 99 ? '99+' : String(count);
+      btn.setAttribute('aria-label', `${btn.dataset.baseLabel}，今天有 ${count} 項待複習`);
+    } else {
+      if(badge) badge.remove();
+      btn.setAttribute('aria-label', btn.dataset.baseLabel);
+    }
+  });
 }
 
 /* ---------- 通用單字卡牌組控制器（主單字庫 / 慣用句支線共用） ---------- */
@@ -1404,7 +1606,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
           ${w.pos ? `<div class="pos-tag">${esc(w.pos)}</div>` : ''}
           ${w.meanings.map((m,i)=>`
             <div class="meaning">${w.meanings.length>1 ? (i+1)+'. ' : ''}${esc(m.zh)}</div>
-            ${m.example ? `<div class="example" lang="ja">${esc(m.example)}</div>` : ''}
+            ${m.example ? `<div class="example" lang="ja">${esc(m.example)} <button class="icon-btn example-speak-btn" data-speak-text="${esc(m.example)}" aria-label="播放例句發音" title="播放例句發音" style="width:24px;height:24px;font-size:0.72rem;vertical-align:middle;">🔊</button></div>` : ''}
             ${m.exampleZh ? `<div class="example-zh">${esc(m.exampleZh)}</div>` : ''}
           `).join('')}
           ${w.kanjiBreakdown ? `<div class="note-box">🈁 ${esc(w.kanjiBreakdown)}</div>` : ''}
@@ -1445,6 +1647,9 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
       });
       document.getElementById(`${P}-btn-know`).addEventListener('click', (e)=>{ e.stopPropagation(); review(w, true); });
       document.getElementById(`${P}-btn-unknow`).addEventListener('click', (e)=>{ e.stopPropagation(); review(w, false); });
+      area.querySelectorAll('.example-speak-btn').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); speak(btn.dataset.speakText); });
+      });
     }
   }
 
@@ -1465,6 +1670,8 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
     }
     saveData(getData());
     markStudied();
+    incrementDailyCount();
+    updateNavBadges();
     idx++;
     flipped = false;
     draw();
@@ -1474,7 +1681,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
 }
 
 /* ---------- 通用小測驗控制器（主單字庫 / 慣用句支線 / 50音 / 基礎會話共用） ---------- */
-function makeQuizController({ getData, areaId, historyKey, questionFn }){
+function makeQuizController({ getData, areaId, historyKey, questionFn, listening }){
   let state = null;
 
   function render(){
@@ -1519,12 +1726,19 @@ function makeQuizController({ getData, areaId, historyKey, questionFn }){
       return;
     }
     const q = state.questions[state.qIndex];
-    const qText = questionFn ? questionFn(q.word) : `${esc(q.word.jp)} 的意思是？`;
+    const isListening = listening && listening();
+    const qText = isListening
+      ? `<button class="icon-btn" id="listen-play-${areaId}" aria-label="播放發音，聽聽看選出正確的意思" title="播放發音" style="width:46px;height:46px;font-size:1.3rem;">🔊</button><div class="sub" style="margin-top:8px;">請聽發音，選出正確的意思</div>`
+      : (questionFn ? questionFn(q.word) : `${esc(q.word.jp)} 的意思是？`);
     area.innerHTML = `
       <div class="sub">題目 ${state.qIndex+1} / ${state.questions.length}　・　目前得分 ${state.correct}</div>
-      <div class="quiz-q" lang="ja">${qText}</div>
+      <div class="quiz-q" lang="ja" style="${isListening?'text-align:center;':''}">${qText}</div>
       <div id="opts-${areaId}"></div>
     `;
+    if(isListening){
+      document.getElementById(`listen-play-${areaId}`).addEventListener('click', ()=> speak(q.word.jp));
+      speak(q.word.jp);
+    }
     const optsEl = document.getElementById(`opts-${areaId}`);
     q.options.forEach(opt=>{
       const b = document.createElement('button');
@@ -1537,6 +1751,7 @@ function makeQuizController({ getData, areaId, historyKey, questionFn }){
           else if(bb.textContent === opt) bb.textContent = '✕ ' + bb.textContent, bb.classList.add('wrong');
         });
         if(opt === q.answer) state.correct++;
+        incrementDailyCount();
         setTimeout(()=>{ state.qIndex++; draw(); }, 700);
       });
       optsEl.appendChild(b);
@@ -1548,7 +1763,25 @@ function makeQuizController({ getData, areaId, historyKey, questionFn }){
 
 /* ---------- 主單字庫 / 慣用句支線 各自的牌組與測驗 ---------- */
 const vocabDeck = makeFlashDeck({ getData:()=>vocab, saveData:saveVocab, areaId:'flash-area', prefix:'v' });
-const vocabQuiz = makeQuizController({ getData:()=>vocab, areaId:'quiz-area', historyKey:LS_QUIZ });
+let vocabQuizListening = false;
+const vocabQuiz = makeQuizController({ getData:()=>vocab, areaId:'quiz-area', historyKey:LS_QUIZ, listening:()=>vocabQuizListening });
+
+document.getElementById('quiz-mode-normal').addEventListener('click', ()=>{
+  vocabQuizListening = false;
+  document.getElementById('quiz-mode-normal').className = 'action btn-primary';
+  document.getElementById('quiz-mode-normal').setAttribute('aria-pressed','true');
+  document.getElementById('quiz-mode-listen').className = 'action btn-ghost';
+  document.getElementById('quiz-mode-listen').setAttribute('aria-pressed','false');
+  vocabQuiz.render();
+});
+document.getElementById('quiz-mode-listen').addEventListener('click', ()=>{
+  vocabQuizListening = true;
+  document.getElementById('quiz-mode-listen').className = 'action btn-primary';
+  document.getElementById('quiz-mode-listen').setAttribute('aria-pressed','true');
+  document.getElementById('quiz-mode-normal').className = 'action btn-ghost';
+  document.getElementById('quiz-mode-normal').setAttribute('aria-pressed','false');
+  vocabQuiz.render();
+});
 
 const idiomDeck = makeFlashDeck({ getData:()=>idioms, saveData:saveIdioms, areaId:'idiom-flash-area', prefix:'idm' });
 const idiomQuiz = makeQuizController({ getData:()=>idioms, areaId:'idiom-quiz-area', historyKey:LS_IDIOM_QUIZ });
@@ -2154,6 +2387,7 @@ function calcStreak(log){
 let editingId = null;
 
 function renderManage(){
+  updateNavBadges();
   document.getElementById('word-count').textContent = vocab.length;
   const list = document.getElementById('word-list');
   if(vocab.length===0){
@@ -2307,6 +2541,7 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     basics: basics,
     basicsQuizHistory: JSON.parse(localStorage.getItem(LS_BASICS_QUIZ) || '[]'),
     kanaQuizHistory: JSON.parse(localStorage.getItem(LS_KANA_QUIZ) || '[]'),
+    dailyGoal: loadDailyCount(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -2352,8 +2587,11 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       }
       if(data.basicsQuizHistory) localStorage.setItem(LS_BASICS_QUIZ, JSON.stringify(data.basicsQuizHistory));
       if(data.kanaQuizHistory) localStorage.setItem(LS_KANA_QUIZ, JSON.stringify(data.kanaQuizHistory));
+      if(data.dailyGoal) saveDailyCount(data.dailyGoal);
       resetForm();
       renderManage();
+      renderDailyGoal();
+      updateNavBadges();
       alert('匯入完成！');
     } catch(err){
       alert('匯入失敗，檔案格式不正確');
@@ -2371,7 +2609,17 @@ document.getElementById('voice-test-btn').addEventListener('click', ()=>{
   speak('こんにちは。これは私の声です。よろしくお願いします。');
 });
 
+/* ---------- 慢速發音切換 ---------- */
+document.getElementById('slow-toggle-btn').addEventListener('click', ()=>{
+  slowSpeak = !slowSpeak;
+  localStorage.setItem(LS_SLOW, slowSpeak ? '1' : '0');
+  updateSlowBtn();
+});
+
 /* ---------- INIT ---------- */
+updateSlowBtn();
+renderDailyGoal();
+updateNavBadges();
 renderKana();
 </script>
 
