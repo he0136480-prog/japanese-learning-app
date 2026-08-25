@@ -1567,25 +1567,51 @@ function updateNavBadges(){
 
 /* ---------- 通用單字卡牌組控制器（主單字庫 / 慣用句支線共用） ---------- */
 function makeFlashDeck({ getData, saveData, areaId, prefix }){
-  let queue = [], idx = 0, flipped = false;
+  let queue = [], idx = 0, flipped = false, allMode = false;
+  const bodyId = `${prefix}-deck-body`;
 
   function render(){
+    const area = document.getElementById(areaId);
+    area.innerHTML = `
+      <div class="sub" style="text-align:center;margin-bottom:10px;">
+        <button class="action btn-ghost" id="${prefix}-mode-toggle" style="padding:6px 14px;font-size:0.82rem;" aria-pressed="${allMode}">${allMode ? '📅 切換回：只看今天到期' : '🔁 切換為：複習全部已學單字'}</button>
+      </div>
+      <div id="${bodyId}"></div>
+    `;
+    document.getElementById(`${prefix}-mode-toggle`).addEventListener('click', ()=>{
+      allMode = !allMode;
+      buildQueue();
+    });
+    buildQueue();
+  }
+
+  function buildQueue(){
     const today = todayStr();
-    queue = shuffle(getData().filter(w => w.nextReview <= today));
+    const data = getData();
+    queue = allMode ? shuffle(data) : shuffle(data.filter(w => w.nextReview <= today));
     idx = 0;
     flipped = false;
-    const area = document.getElementById(areaId);
+    const body = document.getElementById(bodyId);
     if(queue.length === 0){
-      area.innerHTML = `<div class="card empty-msg">🎉 這裡今天要複習的都完成了！</div>`;
+      body.innerHTML = allMode
+        ? `<div class="card empty-msg">目前還沒有任何單字，先去新增一些吧！</div>`
+        : `<div class="card empty-msg">🎉 這裡今天要複習的都完成了！（想複習學過的單字，可以按上面「複習全部已學單字」）</div>`;
       return;
     }
     draw();
   }
 
   function draw(){
-    const area = document.getElementById(areaId);
+    const area = document.getElementById(bodyId);
     if(idx >= queue.length){
-      area.innerHTML = `<div class="card empty-msg">✅ 這一輪複習完成了！（共 ${queue.length} 張）</div>`;
+      area.innerHTML = `
+        <div class="card empty-msg">✅ 這一輪複習完成了！（共 ${queue.length} 張）</div>
+        <div style="text-align:center;">
+          <button class="action btn-primary" id="${prefix}-replay-btn">🔁 再複習一輪</button>
+        </div>
+      `;
+      const replayBtn = document.getElementById(`${prefix}-replay-btn`);
+      if(replayBtn) replayBtn.addEventListener('click', ()=>{ allMode = true; buildQueue(); });
       return;
     }
     const w = queue[idx];
