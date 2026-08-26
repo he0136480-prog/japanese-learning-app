@@ -949,10 +949,18 @@ function seedToWord(s, i){
 function primaryZh(w){ return (w.meanings && w.meanings[0]) ? w.meanings[0].zh : ''; }
 
 // 使用者自己輸入的單字內容在插入畫面前先跳脫，避免打到 < > 等符號時版面跑掉
+function randomInt(maxExclusive){
+  if(window.crypto && window.crypto.getRandomValues){
+    const buf = new Uint32Array(1);
+    window.crypto.getRandomValues(buf);
+    return buf[0] % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
+}
 function shuffle(arr){
   const a = [...arr];
   for(let i=a.length-1; i>0; i--){
-    const j = Math.floor(Math.random() * (i+1));
+    const j = randomInt(i+1);
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -1836,10 +1844,12 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
     const src = (poolSource && poolSource.length) ? poolSource : data;
     const pool = shuffle(src).slice(0, Math.min(10, src.length));
     return pool.map(w=>{
-      const distractors = shuffle(data.filter(x=>x.id!==w.id)).slice(0,3).map(x=>primaryZh(x));
       const answer = primaryZh(w);
+      // 排除跟正確答案中文意思完全相同的字，避免選項文字重複導致「點哪個都判定對」
+      const distractors = shuffle(data.filter(x=>x.id!==w.id && primaryZh(x)!==answer)).slice(0,3).map(x=>primaryZh(x));
       const options = shuffle([...distractors, answer]);
-      return { word:w, options, answer };
+      const answerIndex = options.indexOf(answer);
+      return { word:w, options, answer, answerIndex };
     });
   }
 
@@ -1878,17 +1888,19 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
       speak(q.word.jp);
     }
     const optsEl = document.getElementById(`opts-${areaId}`);
-    q.options.forEach(opt=>{
+    q.options.forEach((opt, oi)=>{
       const b = document.createElement('button');
       b.className = 'quiz-opt';
       b.textContent = opt;
       b.addEventListener('click', ()=>{
-        document.querySelectorAll(`#opts-${areaId} .quiz-opt`).forEach(bb=>{
+        // 用選項在陣列中的位置(index)判斷對錯，不要比對文字內容——
+        // 中文意思剛好重複的字會讓兩個選項文字一樣，比文字會導致點哪個都判定「對」
+        document.querySelectorAll(`#opts-${areaId} .quiz-opt`).forEach((bb, bi)=>{
           bb.disabled = true;
-          if(bb.textContent === q.answer) bb.textContent = '✓ ' + bb.textContent, bb.classList.add('correct');
-          else if(bb.textContent === opt) bb.textContent = '✕ ' + bb.textContent, bb.classList.add('wrong');
+          if(bi === q.answerIndex) bb.textContent = '✓ ' + bb.textContent, bb.classList.add('correct');
+          else if(bi === oi) bb.textContent = '✕ ' + bb.textContent, bb.classList.add('wrong');
         });
-        if(opt === q.answer) state.correct++;
+        if(oi === q.answerIndex) state.correct++;
         incrementDailyCount();
         setTimeout(()=>{ state.qIndex++; draw(); }, 700);
       });
