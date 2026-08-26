@@ -301,6 +301,22 @@
     margin-right:6px;
     flex-shrink:0;
   }
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,15,10,0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .modal-box{
+    max-width:360px;
+    width:100%;
+    text-align:center;
+    margin-bottom:0;
+  }
   .flashcard .meaning{
     font-family:var(--serif);
     font-size:1.25rem;
@@ -1530,6 +1546,63 @@ function loadDailyCount(){
 }
 function saveDailyCount(d){ localStorage.setItem(LS_DAILY_COUNT, JSON.stringify(d)); }
 
+/* ---------- 主單字庫複習里程碑：每複習20次跳出測驗鞏固提示 ---------- */
+const LS_VOCAB_MILESTONE = 'jl_vocab_milestone';
+const MILESTONE_EVERY = 20;
+
+function loadVocabMilestone(){
+  const m = JSON.parse(localStorage.getItem(LS_VOCAB_MILESTONE) || 'null');
+  return m || { count:0, recentIds:[] };
+}
+function saveVocabMilestone(m){ localStorage.setItem(LS_VOCAB_MILESTONE, JSON.stringify(m)); }
+
+let pendingQuizFocusIds = null;
+
+function handleVocabReview(w){
+  const m = loadVocabMilestone();
+  m.count = (m.count||0) + 1;
+  m.recentIds = (m.recentIds||[]).filter(id=>id!==w.id);
+  m.recentIds.push(w.id);
+  if(m.recentIds.length > MILESTONE_EVERY) m.recentIds = m.recentIds.slice(-MILESTONE_EVERY);
+  saveVocabMilestone(m);
+  if(m.count % MILESTONE_EVERY === 0){
+    showQuizPromptModal([...m.recentIds]);
+  }
+}
+
+function showQuizPromptModal(focusIds){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="card modal-box" role="dialog" aria-modal="true" aria-labelledby="quiz-prompt-title">
+      <div id="quiz-prompt-title" style="font-family:var(--serif);font-size:1.2rem;font-weight:600;margin-bottom:8px;">🎯 已複習 ${MILESTONE_EVERY} 個單字！</div>
+      <div class="sub" style="margin-bottom:16px;">要不要花 2 分鐘做個小測驗鞏固一下？</div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="action btn-ghost" id="quiz-prompt-later">稍後再說</button>
+        <button class="action btn-primary" id="quiz-prompt-start">開始測驗</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const close = ()=> overlay.remove();
+  document.getElementById('quiz-prompt-later').addEventListener('click', close);
+  document.getElementById('quiz-prompt-start').addEventListener('click', ()=>{
+    close();
+    vocabQuizListening = false;
+    const normalBtn = document.getElementById('quiz-mode-normal');
+    const listenBtn = document.getElementById('quiz-mode-listen');
+    if(normalBtn){ normalBtn.className = 'action btn-primary'; normalBtn.setAttribute('aria-pressed','true'); }
+    if(listenBtn){ listenBtn.className = 'action btn-ghost'; listenBtn.setAttribute('aria-pressed','false'); }
+    pendingQuizFocusIds = focusIds;
+    const quizBtn = document.querySelector('.tab-btn[data-tab="quiz"]');
+    if(quizBtn) quizBtn.click();
+  });
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+  document.addEventListener('keydown', function escHandler(e){
+    if(e.key==='Escape'){ close(); document.removeEventListener('keydown', escHandler); }
+  });
+}
+
 function showCelebration(text){
   const el = document.getElementById('celebration-toast');
   if(!el) return;
@@ -1588,7 +1661,7 @@ function updateNavBadges(){
 }
 
 /* ---------- 通用單字卡牌組控制器（主單字庫 / 慣用句支線共用） ---------- */
-function makeFlashDeck({ getData, saveData, areaId, prefix }){
+function makeFlashDeck({ getData, saveData, areaId, prefix, onReview }){
   let queue = [], idx = 0, flipped = false, allMode = false;
   const bodyId = `${prefix}-deck-body`;
 
@@ -1723,6 +1796,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
     markStudied();
     incrementDailyCount();
     updateNavBadges();
+    if(onReview) onReview(w, knew);
     idx++;
     flipped = false;
     draw();
@@ -1735,19 +1809,21 @@ function makeFlashDeck({ getData, saveData, areaId, prefix }){
 function makeQuizController({ getData, areaId, historyKey, questionFn, listening }){
   let state = null;
 
-  function render(){
+  function render(focusIds){
     const area = document.getElementById(areaId);
     const data = getData();
     if(data.length < 4){
       area.innerHTML = `<div class="empty-msg">項目至少要有 4 個才能出小測驗，先去新增一些吧！</div>`;
       return;
     }
-    state = { qIndex:0, correct:0, questions: build(data) };
+    state = { qIndex:0, correct:0, questions: build(data, Array.isArray(focusIds) ? focusIds : null) };
     draw();
   }
 
-  function build(data){
-    const pool = shuffle(data).slice(0, Math.min(10, data.length));
+  function build(data, focusIds){
+    const poolSource = (focusIds && focusIds.length) ? data.filter(w=>focusIds.includes(w.id)) : null;
+    const src = (poolSource && poolSource.length) ? poolSource : data;
+    const pool = shuffle(src).slice(0, Math.min(10, src.length));
     return pool.map(w=>{
       const distractors = shuffle(data.filter(x=>x.id!==w.id)).slice(0,3).map(x=>primaryZh(x));
       const answer = primaryZh(w);
@@ -1773,7 +1849,7 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
           <div style="font-size:2rem;color:var(--accent);margin:10px 0;">${score} / ${total}</div>
           <button class="action btn-primary" id="retry-${areaId}">再測一次</button>
         </div>`;
-      document.getElementById(`retry-${areaId}`).addEventListener('click', render);
+      document.getElementById(`retry-${areaId}`).addEventListener('click', ()=>render());
       return;
     }
     const q = state.questions[state.qIndex];
@@ -1813,7 +1889,7 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
 }
 
 /* ---------- 主單字庫 / 慣用句支線 各自的牌組與測驗 ---------- */
-const vocabDeck = makeFlashDeck({ getData:()=>vocab, saveData:saveVocab, areaId:'flash-area', prefix:'v' });
+const vocabDeck = makeFlashDeck({ getData:()=>vocab, saveData:saveVocab, areaId:'flash-area', prefix:'v', onReview:handleVocabReview });
 let vocabQuizListening = false;
 const vocabQuiz = makeQuizController({ getData:()=>vocab, areaId:'quiz-area', historyKey:LS_QUIZ, listening:()=>vocabQuizListening });
 
@@ -1838,7 +1914,11 @@ const idiomDeck = makeFlashDeck({ getData:()=>idioms, saveData:saveIdioms, areaI
 const idiomQuiz = makeQuizController({ getData:()=>idioms, areaId:'idiom-quiz-area', historyKey:LS_IDIOM_QUIZ });
 
 function renderFlash(){ vocabDeck.render(); }
-function renderQuiz(){ vocabQuiz.render(); }
+function renderQuiz(){
+  const focusIds = pendingQuizFocusIds;
+  pendingQuizFocusIds = null;
+  vocabQuiz.render(focusIds);
+}
 
 function renderIdioms(){
   const isFlash = document.querySelector('.idiom-subtab.active').dataset.idiomTab === 'flash';
@@ -2593,6 +2673,7 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     basicsQuizHistory: JSON.parse(localStorage.getItem(LS_BASICS_QUIZ) || '[]'),
     kanaQuizHistory: JSON.parse(localStorage.getItem(LS_KANA_QUIZ) || '[]'),
     dailyGoal: loadDailyCount(),
+    vocabMilestone: loadVocabMilestone(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -2639,6 +2720,7 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       if(data.basicsQuizHistory) localStorage.setItem(LS_BASICS_QUIZ, JSON.stringify(data.basicsQuizHistory));
       if(data.kanaQuizHistory) localStorage.setItem(LS_KANA_QUIZ, JSON.stringify(data.kanaQuizHistory));
       if(data.dailyGoal) saveDailyCount(data.dailyGoal);
+      if(data.vocabMilestone) saveVocabMilestone(data.vocabMilestone);
       resetForm();
       renderManage();
       renderDailyGoal();
