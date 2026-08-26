@@ -1460,13 +1460,24 @@ function speak(text){
     alert('你的瀏覽器不支援語音播放功能，建議改用 Chrome 或 Safari 最新版。');
     return;
   }
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'ja-JP';
-  u.rate = slowSpeak ? 0.55 : 0.85;
-  const voice = pickJapaneseVoice();
-  if(voice) u.voice = voice;
-  window.speechSynthesis.speak(u);
+  const synth = window.speechSynthesis;
+  const doSpeak = ()=>{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    u.rate = slowSpeak ? 0.55 : 0.85;
+    const voice = pickJapaneseVoice();
+    if(voice) u.voice = voice;
+    synth.speak(u);
+  };
+  // iOS Safari 等行動瀏覽器上，cancel() 後立刻 speak() 常會讓新語音被吃掉、完全沒聲音；
+  // 只有真的有東西在播放/排隊時才 cancel 並延遲一點再說，沒有東西在播放時直接說，
+  // 避免破壞「使用者手勢直接觸發」的要求（延遲太多瀏覽器會擋掉非使用者觸發的播放）
+  if(synth.speaking || synth.pending){
+    synth.cancel();
+    setTimeout(doSpeak, 60);
+  } else {
+    doSpeak();
+  }
 }
 
 /* ---------- SPEECH: pronunciation check ---------- */
