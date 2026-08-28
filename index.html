@@ -269,6 +269,29 @@
     letter-spacing:0.3px;
     margin-top:4px;
   }
+  .multi-reading-badge{
+    display:inline-block;
+    font-size:0.7rem;
+    padding:3px 10px;
+    border-radius:20px;
+    background:var(--accent-soft);
+    color:var(--accent-2);
+    font-weight:700;
+    margin-top:8px;
+  }
+  .flashcard .reading-row.multi{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px 14px;
+    margin-top:8px;
+  }
+  .multi-reading-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+    font-size:0.92rem;
+  }
   .pos-tag{
     display:inline-block;
     font-size:0.7rem;
@@ -1116,6 +1139,26 @@ function seedToWord(s, i){
 
 function primaryZh(w){ return (w.meanings && w.meanings[0]) ? w.meanings[0].zh : ''; }
 
+// 有些字有不只一種唸法（例如「七」なな／しち），這裡把每種唸法拆成個別可點擊試聽的小標籤，
+// 而不是只顯示一串用／隔開的文字，讓使用者一眼看出「這個字有幾種唸法」並能個別聽發音
+function renderReadingRow(w){
+  if(!w.kana && !w.romaji) return '';
+  const isMulti = w.kana && w.kana.includes('／');
+  if(!isMulti){
+    return `<div class="reading-row">${[w.kana, w.romaji].filter(Boolean).map(esc).join('　')}</div>`;
+  }
+  const kanaParts = w.kana.split('／');
+  const romajiParts = (w.romaji||'').split('/').map(s=>s.trim());
+  const chips = kanaParts.map((k,i)=>{
+    const r = romajiParts[i] || '';
+    return `<span class="multi-reading-chip"><button class="icon-btn reading-chip-speak" data-speak-text="${esc(k)}" aria-label="播放「${esc(k)}」的發音" title="播放這個唸法" style="width:22px;height:22px;font-size:0.68rem;vertical-align:middle;">🔊</button> ${esc(k)}${r ? `（${esc(r)}）` : ''}</span>`;
+  }).join('　');
+  return `
+    <div class="multi-reading-badge">🔀 這個字有 ${kanaParts.length} 種唸法</div>
+    <div class="reading-row multi">${chips}</div>
+  `;
+}
+
 // 使用者自己輸入的單字內容在插入畫面前先跳脫，避免打到 < > 等符號時版面跑掉
 function randomInt(maxExclusive){
   if(window.crypto && window.crypto.getRandomValues){
@@ -1926,7 +1969,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix, onReview }){
           : (w.emoji ? `<div class="word-emoji" aria-hidden="true">${w.emoji}</div>` : '')}
         ${w.image && w.credit ? `<div class="credit">照片：${w.creditUrl ? `<a href="${esc(w.creditUrl)}" target="_blank" rel="noopener noreferrer" style="color:inherit;" onclick="event.stopPropagation()">${esc(w.credit)}</a>` : esc(w.credit)}（CC 授權）</div>` : ''}
         <div class="term" lang="ja">${esc(w.jp)}<button class="icon-btn" id="${P}-speak-btn" aria-label="播放發音" title="播放發音">🔊</button></div>
-        ${(w.kana || w.romaji) ? `<div class="reading-row">${[w.kana, w.romaji].filter(Boolean).map(esc).join('　')}</div>` : ''}
+        ${renderReadingRow(w)}
         ${flipped ? `
           ${w.pos ? `<div class="pos-tag">${esc(w.pos)}</div>` : ''}
           ${(w.misses||0) >= LEECH_THRESHOLD ? `<div class="leech-tag">⚠️ 加強關卡・已經記不住 ${w.misses} 次</div>` : ''}
@@ -1958,6 +2001,9 @@ function makeFlashDeck({ getData, saveData, areaId, prefix, onReview }){
     document.getElementById(`${P}-speak-btn`).addEventListener('click', (e)=>{
       e.stopPropagation();
       speak(w.jp);
+    });
+    area.querySelectorAll('.reading-chip-speak').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); speak(btn.dataset.speakText); });
     });
     if(idx>0){
       document.getElementById(`${P}-prev-btn`).addEventListener('click', (e)=>{
