@@ -608,6 +608,7 @@
     margin-top:10px;
   }
   .kana-cell{
+    position:relative;
     border:1px solid var(--line);
     background:var(--card);
     border-radius:12px;
@@ -621,6 +622,13 @@
   }
   .kana-cell:hover{ border-color:var(--accent); background:var(--accent-soft); }
   .kana-cell:active{ transform:scale(0.95); }
+  .kana-cell.leech{ border-color:var(--bad); }
+  .kana-cell .leech-dot{
+    position:absolute;
+    top:5px;
+    right:5px;
+    margin-right:0;
+  }
   .kana-cell-empty{ border:none; background:transparent; cursor:default; }
   .kana-glyph{ font-family:var(--serif); font-size:1.3rem; }
   .kana-romaji{ font-size:0.68rem; color:var(--ink-soft); }
@@ -962,6 +970,16 @@ const LS_QUIZ = 'jl_quizhistory';
 
 const BOX_INTERVAL_DAYS = [0,1,2,4,7,14]; // index = box number (1-5)
 const LEECH_THRESHOLD = 3; // 累計答錯達到這個次數，標記為「加強關卡」提醒使用者換方法記
+
+/* ---------- 50音測驗答錯追蹤（用假名字元本身當 key，不會因為換頁而重新計算） ---------- */
+const LS_KANA_MISSES = 'jl_kana_misses';
+function loadKanaMisses(){ return JSON.parse(localStorage.getItem(LS_KANA_MISSES) || '{}'); }
+function saveKanaMisses(m){ localStorage.setItem(LS_KANA_MISSES, JSON.stringify(m)); }
+function recordKanaMiss(kana){
+  const m = loadKanaMisses();
+  m[kana] = (m[kana]||0) + 1;
+  saveKanaMisses(m);
+}
 
 const SEED = [
   { jp:"学校", kana:"がっこう", romaji:"gakkou", zh:"學校", example:"私は毎日学校へ行きます。", exampleZh:"我每天去學校。", pos:"名詞", emoji:"🏫",
@@ -1405,11 +1423,14 @@ const KATAKANA_WORDS = flattenKana(KATAKANA, 'k');
 let kanaScript = 'hiragana'; // 'hiragana' | 'katakana'，圖表和測驗共用同一個目前選擇的文字系統
 
 function renderKanaGrid(rows, cols){
+  const misses = loadKanaMisses();
   return `<div class="kana-grid" style="grid-template-columns:repeat(${cols},1fr);">
     ${rows.map(row=>row.map(cell=>{
       if(!cell) return `<div class="kana-cell kana-cell-empty" aria-hidden="true"></div>`;
       const [kana, romaji] = cell;
-      return `<button type="button" class="kana-cell" data-speak="${esc(kana)}" aria-label="${esc(kana)}，讀音 ${esc(romaji)}，點擊播放發音">
+      const isLeech = (misses[kana]||0) >= LEECH_THRESHOLD;
+      return `<button type="button" class="kana-cell${isLeech?' leech':''}" data-speak="${esc(kana)}" aria-label="${esc(kana)}，讀音 ${esc(romaji)}${isLeech?'，加強關卡':''}，點擊播放發音">
+        ${isLeech ? `<span class="leech-dot" aria-hidden="true"></span>` : ''}
         <span class="kana-glyph" lang="ja">${esc(kana)}</span><span class="kana-romaji">${esc(romaji)}</span>
       </button>`;
     }).join('')).join('')}
@@ -1440,24 +1461,35 @@ function renderKanaChart(){
   });
 }
 
+let kanaQuizReverse = false; // false: 假名→拼音（預設）／true: 拼音→假名
 const kanaQuiz = makeQuizController({
   getData: ()=> kanaScript==='hiragana' ? HIRAGANA_WORDS : KATAKANA_WORDS,
   areaId:'kana-quiz-inner',
   historyKey:LS_KANA_QUIZ,
-  questionFn: w => `<span lang="ja" style="font-size:1.6rem;">${esc(w.jp)}</span> 的羅馬拼音是？`
+  questionFn: w => `<span lang="ja" style="font-size:1.6rem;">${esc(w.jp)}</span> 的羅馬拼音是？`,
+  reverse: ()=> kanaQuizReverse,
+  onWrong: w => recordKanaMiss(w.jp),
+  leechSource: loadKanaMisses
 });
 
 function renderKanaQuiz(){
   const area = document.getElementById('kana-quiz-area');
   area.innerHTML = `
-    <div class="btn-row" style="margin-bottom:14px;">
+    <div class="btn-row" style="margin-bottom:10px;">
       <button class="action ${kanaScript==='hiragana'?'btn-primary':'btn-ghost'}" id="kquiz-hira">ひらがな</button>
       <button class="action ${kanaScript==='katakana'?'btn-primary':'btn-ghost'}" id="kquiz-kata">カタカナ</button>
     </div>
+    <div class="btn-row" style="margin-bottom:14px;">
+      <button class="action ${!kanaQuizReverse?'btn-primary':'btn-ghost'}" id="kquiz-forward" aria-pressed="${!kanaQuizReverse}">假名→拼音</button>
+      <button class="action ${kanaQuizReverse?'btn-primary':'btn-ghost'}" id="kquiz-reverse" aria-pressed="${kanaQuizReverse}">拼音→假名</button>
+    </div>
+    <div class="sub" style="margin-bottom:10px;">答錯次數多的假名會被更頻繁地考出來，50音圖表上也會標紅提醒</div>
     <div id="kana-quiz-inner"></div>
   `;
   document.getElementById('kquiz-hira').addEventListener('click', ()=>{ kanaScript='hiragana'; renderKanaQuiz(); });
   document.getElementById('kquiz-kata').addEventListener('click', ()=>{ kanaScript='katakana'; renderKanaQuiz(); });
+  document.getElementById('kquiz-forward').addEventListener('click', ()=>{ kanaQuizReverse=false; renderKanaQuiz(); });
+  document.getElementById('kquiz-reverse').addEventListener('click', ()=>{ kanaQuizReverse=true; renderKanaQuiz(); });
   kanaQuiz.render();
 }
 
@@ -2057,7 +2089,7 @@ function makeFlashDeck({ getData, saveData, areaId, prefix, onReview }){
 }
 
 /* ---------- 通用小測驗控制器（主單字庫 / 慣用句支線 / 50音 / 基礎會話共用） ---------- */
-function makeQuizController({ getData, areaId, historyKey, questionFn, listening }){
+function makeQuizController({ getData, areaId, historyKey, questionFn, listening, reverse, onWrong, leechSource }){
   let state = null;
 
   function render(focusIds){
@@ -2073,12 +2105,22 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
 
   function build(data, focusIds){
     const poolSource = (focusIds && focusIds.length) ? data.filter(w=>focusIds.includes(w.id)) : null;
-    const src = (poolSource && poolSource.length) ? poolSource : data;
-    const pool = shuffle(src).slice(0, Math.min(10, src.length));
+    let src = (poolSource && poolSource.length) ? poolSource : data;
+    if(leechSource){
+      // 加強關卡的項目優先排進題目池，答錯次數多的字要被更頻繁地考，而不是雨露均霑地隨機
+      const misses = leechSource();
+      const isLeech = w => (misses[w.jp]||0) >= LEECH_THRESHOLD;
+      src = [...shuffle(src.filter(isLeech)), ...shuffle(src.filter(w=>!isLeech(w)))];
+    } else {
+      src = shuffle(src);
+    }
+    const pool = src.slice(0, Math.min(10, src.length));
+    const isReverse = reverse && reverse();
     return pool.map(w=>{
-      const answer = primaryZh(w);
-      // 排除跟正確答案中文意思完全相同的字，避免選項文字重複導致「點哪個都判定對」
-      const distractors = shuffle(data.filter(x=>x.id!==w.id && primaryZh(x)!==answer)).slice(0,3).map(x=>primaryZh(x));
+      const answer = isReverse ? w.jp : primaryZh(w);
+      const valueOf = x => isReverse ? x.jp : primaryZh(x);
+      // 排除跟正確答案完全相同的值，避免選項文字重複導致「點哪個都判定對」
+      const distractors = shuffle(data.filter(x=>x.id!==w.id && valueOf(x)!==answer)).slice(0,3).map(valueOf);
       const options = shuffle([...distractors, answer]);
       const answerIndex = options.indexOf(answer);
       return { word:w, options, answer, answerIndex };
@@ -2107,9 +2149,12 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
     }
     const q = state.questions[state.qIndex];
     const isListening = listening && listening();
+    const isReverse = reverse && reverse();
     const qText = isListening
       ? `<button class="icon-btn" id="listen-play-${areaId}" aria-label="播放發音，聽聽看選出正確的意思" title="播放發音" style="width:46px;height:46px;font-size:1.3rem;">🔊</button><div class="sub" style="margin-top:8px;">請聽發音，選出正確的意思</div>`
-      : (questionFn ? questionFn(q.word) : `${esc(q.word.jp)} 的意思是？`);
+      : isReverse
+        ? `「${esc(primaryZh(q.word))}」的假名是哪一個？`
+        : (questionFn ? questionFn(q.word) : `${esc(q.word.jp)} 的意思是？`);
     area.innerHTML = `
       <div class="sub">題目 ${state.qIndex+1} / ${state.questions.length}　・　目前得分 ${state.correct}</div>
       <div class="quiz-q" lang="ja" style="${isListening?'text-align:center;':''}">${qText}</div>
@@ -2124,6 +2169,7 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
       const b = document.createElement('button');
       b.className = 'quiz-opt';
       b.textContent = opt;
+      if(isReverse) b.lang = 'ja';
       b.addEventListener('click', ()=>{
         // 用選項在陣列中的位置(index)判斷對錯，不要比對文字內容——
         // 中文意思剛好重複的字會讓兩個選項文字一樣，比文字會導致點哪個都判定「對」
@@ -2132,7 +2178,8 @@ function makeQuizController({ getData, areaId, historyKey, questionFn, listening
           if(bi === q.answerIndex) bb.textContent = '✓ ' + bb.textContent, bb.classList.add('correct');
           else if(bi === oi) bb.textContent = '✕ ' + bb.textContent, bb.classList.add('wrong');
         });
-        if(oi === q.answerIndex) state.correct++;
+        if(oi === q.answerIndex){ state.correct++; }
+        else if(onWrong){ onWrong(q.word); }
         incrementDailyCount();
         setTimeout(()=>{ state.qIndex++; draw(); }, 700);
       });
@@ -2957,6 +3004,7 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     dailyGoal: loadDailyCount(),
     vocabMilestone: loadVocabMilestone(),
     questionNotes: loadQNotes(),
+    kanaMisses: loadKanaMisses(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -3005,6 +3053,7 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       if(data.dailyGoal) saveDailyCount(data.dailyGoal);
       if(data.vocabMilestone) saveVocabMilestone(data.vocabMilestone);
       if(Array.isArray(data.questionNotes)) saveQNotes(data.questionNotes);
+      if(data.kanaMisses) saveKanaMisses(data.kanaMisses);
       renderQNotes();
       resetForm();
       renderManage();
