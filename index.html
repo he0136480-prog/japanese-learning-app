@@ -280,6 +280,18 @@
     font-weight:700;
     letter-spacing:0.03em;
   }
+  .level-tag{
+    display:inline-block;
+    font-size:0.7rem;
+    padding:3px 11px;
+    border-radius:20px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    white-space:nowrap;
+  }
+  .level-tag.level-low{ background:var(--good-soft); color:var(--good); }
+  .level-tag.level-mid{ background:var(--accent-soft); color:var(--accent-2); }
+  .level-tag.level-high{ background:var(--bad-soft); color:var(--bad); }
   .leech-tag{
     display:inline-block;
     font-size:0.72rem;
@@ -2343,10 +2355,29 @@ function submitGrammarQuiz(c){
 /* ---------- READING ---------- */
 const LS_READING = 'jl_reading';
 
+const READING_LEVELS = {
+  low:  { label:'基礎', order:0 },
+  mid:  { label:'中級', order:1 },
+  high: { label:'高級', order:2 }
+};
+
 const READINGS = [
+  {
+    id:'r0',
+    title:'わたしの学校生活（我的學校生活）',
+    level:'low',
+    grammarFocus:['g1','g2'],
+    text:`わたしは毎朝、電車で学校へ行きます。学校で友達と話します。友達はいつも元気です。お昼、友達と一緒にご飯を食べます。水も飲みます。今日は天気がいいです。学校の図書館はとても静かです。図書館で新しい本を読みます。先生はいつも親切です。今日も楽しい一日でした。`,
+    questions:[
+      { q:'作者每天早上怎麼去學校？', options:['電車','走路','巴士'], answer:0 },
+      { q:'作者和誰一起吃午餐？', options:['老師','家人','朋友'], answer:2 },
+      { q:'學校的圖書館氣氛怎麼樣？', options:['很吵','很安靜','很小'], answer:1 }
+    ]
+  },
   {
     id:'r1',
     title:'朝の習慣（早晨的習慣）',
+    level:'low',
     grammarFocus:['g4','g2'],
     text:`私は毎朝六時に起きます。起きて、すぐに顔を洗います。それから、朝ごはんを食べます。私はいつもパンとコーヒーを飲みます。朝ごはんを食べた後、新聞を読みます。天気がいい日は、散歩に行きます。天気が悪い日は、家で本を読みます。七時半に家を出て、会社に行きます。電車はいつも混んでいますが、会社までは三十分ぐらいです。この習慣は簡単ですが、一日を元気に始めるために、とても大切です。`,
     questions:[
@@ -2358,6 +2389,7 @@ const READINGS = [
   {
     id:'r2',
     title:'週末の予定（週末的計畫）',
+    level:'mid',
     grammarFocus:['g9','g3'],
     text:`今度の週末、友達と図書館で勉強するつもりです。もし時間があれば、映画も見たいです。土曜日の朝、まず部屋を掃除します。それから、友達に会って、一緒に図書館に行きます。図書館で三時間ぐらい勉強したら、近くのレストランでご飯を食べます。日曜日は、天気がよかったら、公園を散歩します。天気が悪かったら、家でゆっくり休みます。友達と会うのは楽しいですから、週末が来るのが楽しみです。`,
     questions:[
@@ -2369,6 +2401,7 @@ const READINGS = [
   {
     id:'r3',
     title:'忙しい一日（忙碌的一天）',
+    level:'high',
     grammarFocus:['g7','g6'],
     text:`今日は忙しい一日でした。朝、先生が新しい本をくれました。とても嬉しかったです。その後、会社で会議がありました。会議で、部長に資料を見せました。部長は「よくできましたね」と言ってくれました。お昼、友達に会って、一緒にご飯を食べました。友達は財布を忘れて、私がお金を貸してあげました。夕方、母に電話をかけました。母は元気そうでした。今日は忙しかったですが、いい一日でした。`,
     questions:[
@@ -2427,14 +2460,19 @@ function renderReading(){
 function renderReadingList(){
   const progress = loadReadingProgress();
   const area = document.getElementById('reading-area');
-  area.innerHTML = `<div class="sub" style="margin-bottom:6px;">讀完短文後做理解測驗，練習不查字典也能抓住大意</div>` +
-    READINGS.map(r=>{
+  const sorted = [...READINGS].sort((a,b)=> (READING_LEVELS[a.level]?.order ?? 1) - (READING_LEVELS[b.level]?.order ?? 1));
+  area.innerHTML = `<div class="sub" style="margin-bottom:6px;">文章依難度由低到高排列，讀完短文後做理解測驗，練習不查字典也能抓住大意</div>` +
+    sorted.map(r=>{
       const p = progress[r.id];
       const preview = r.text.slice(0,50) + '...';
+      const lv = READING_LEVELS[r.level];
       return `
-        <div class="card reading-card" data-open="${r.id}" role="button" tabindex="0" aria-label="開啟文章：${r.title}">
+        <div class="card reading-card" data-open="${r.id}" role="button" tabindex="0" aria-label="開啟文章：${r.title}，難度：${lv ? lv.label : ''}">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-            <h3 style="margin:0;">${r.title}</h3>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              ${lv ? `<span class="level-tag level-${r.level}">${lv.label}</span>` : ''}
+              <h3 style="margin:0;">${r.title}</h3>
+            </div>
             ${p ? `<span class="pos-tag" style="white-space:nowrap;">已完成 ${p.score}/${p.total}</span>` : ''}
           </div>
           <div class="sub" style="margin:8px 0 0;" lang="ja">${preview}</div>
@@ -2456,7 +2494,8 @@ function renderReadingDetail(){
   area.innerHTML = `
     <button class="action btn-ghost" id="reading-back-btn" style="margin-bottom:14px;">← 返回文章列表</button>
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        ${READING_LEVELS[r.level] ? `<span class="level-tag level-${r.level}">${READING_LEVELS[r.level].label}</span>` : ''}
         <h3 style="margin:0;">${r.title}</h3>
         <button class="icon-btn" id="reading-speak-btn" aria-label="朗讀全文" title="朗讀全文" style="width:32px;height:32px;font-size:0.95rem;">🔊</button>
       </div>
