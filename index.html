@@ -317,6 +317,71 @@
     text-align:center;
     margin-bottom:0;
   }
+  .q-fab{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    font-size:1.5rem;
+    box-shadow:var(--shadow-lg);
+    cursor:pointer;
+    z-index:900;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .q-fab:hover{ transform:translateY(-2px); }
+  .q-fab-badge{
+    position:absolute;
+    top:-4px;
+    right:-4px;
+    background:var(--bad);
+    color:#fff;
+    font-size:0.7rem;
+    font-weight:700;
+    min-width:18px;
+    height:18px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 4px;
+    box-shadow:0 0 0 2px var(--bg);
+  }
+  .q-panel{
+    position:fixed;
+    right:20px;
+    bottom:88px;
+    width:320px;
+    max-width:calc(100vw - 40px);
+    max-height:70vh;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-lg);
+    padding:16px;
+    z-index:900;
+    display:none;
+    flex-direction:column;
+    gap:10px;
+    overflow-y:auto;
+  }
+  .q-panel.open{ display:flex; }
+  .q-panel textarea{ font-size:0.9rem; }
+  .q-note-item{
+    border-bottom:1px solid var(--line);
+    padding:8px 0;
+  }
+  .q-note-item:last-child{ border-bottom:none; }
+  @media (max-width:420px){
+    .q-panel{ right:12px; left:12px; width:auto; max-width:none; bottom:80px; }
+    .q-fab{ right:16px; bottom:16px; }
+  }
   .flashcard .meaning{
     font-family:var(--serif);
     font-size:1.25rem;
@@ -843,6 +908,17 @@
   </section>
 
 </main>
+
+<button class="q-fab" id="q-fab-btn" aria-label="問題筆記本" aria-haspopup="dialog" aria-expanded="false">
+  💬<span class="q-fab-badge" id="q-fab-badge" style="display:none;">0</span>
+</button>
+<div class="q-panel" id="q-panel" role="dialog" aria-label="問題筆記本" aria-hidden="true">
+  <div style="font-family:var(--serif);font-weight:700;font-size:1.05rem;">💬 問題筆記本</div>
+  <div class="sub" style="font-size:0.78rem;line-height:1.5;margin-bottom:0;">這個網頁沒辦法即時傳訊息給我，這裡只是先幫你記下來，之後你自己複製過去問。</div>
+  <textarea id="q-note-input" rows="3" placeholder="寫下你的問題..." aria-label="輸入你的問題"></textarea>
+  <button class="action btn-primary" id="q-note-save-btn" style="align-self:flex-start;">儲存</button>
+  <div id="q-note-list"></div>
+</div>
 
 <script>
 const LS_VOCAB = 'jl_vocab';
@@ -2697,6 +2773,7 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     kanaQuizHistory: JSON.parse(localStorage.getItem(LS_KANA_QUIZ) || '[]'),
     dailyGoal: loadDailyCount(),
     vocabMilestone: loadVocabMilestone(),
+    questionNotes: loadQNotes(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -2744,6 +2821,8 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       if(data.kanaQuizHistory) localStorage.setItem(LS_KANA_QUIZ, JSON.stringify(data.kanaQuizHistory));
       if(data.dailyGoal) saveDailyCount(data.dailyGoal);
       if(data.vocabMilestone) saveVocabMilestone(data.vocabMilestone);
+      if(Array.isArray(data.questionNotes)) saveQNotes(data.questionNotes);
+      renderQNotes();
       resetForm();
       renderManage();
       renderDailyGoal();
@@ -2772,11 +2851,96 @@ document.getElementById('slow-toggle-btn').addEventListener('click', ()=>{
   updateSlowBtn();
 });
 
+/* ---------- 問題筆記本（右下角浮動按鈕，只存本機，不會即時傳送） ---------- */
+const LS_QUESTION_NOTES = 'jl_question_notes';
+function loadQNotes(){ return JSON.parse(localStorage.getItem(LS_QUESTION_NOTES) || '[]'); }
+function saveQNotes(list){ localStorage.setItem(LS_QUESTION_NOTES, JSON.stringify(list)); }
+
+function renderQNotes(){
+  const list = loadQNotes();
+  const badge = document.getElementById('q-fab-badge');
+  if(badge){
+    if(list.length > 0){ badge.style.display = 'flex'; badge.textContent = String(list.length); }
+    else badge.style.display = 'none';
+  }
+  const listEl = document.getElementById('q-note-list');
+  if(!listEl) return;
+  if(list.length === 0){
+    listEl.innerHTML = `<div class="sub" style="text-align:center;padding:10px 0;">還沒有記錄的問題</div>`;
+    return;
+  }
+  listEl.innerHTML = [...list].map((n,i)=>i).reverse().map(idx=>{
+    const n = list[idx];
+    return `
+      <div class="q-note-item">
+        <div style="font-size:0.7rem;color:var(--ink-soft);margin-bottom:4px;">${esc(n.time)}</div>
+        <div style="font-size:0.88rem;white-space:pre-wrap;margin-bottom:6px;">${esc(n.text)}</div>
+        <div style="display:flex;gap:10px;">
+          <button class="del-btn" data-copy="${idx}" aria-label="複製這則問題" style="color:var(--accent);">複製</button>
+          <button class="del-btn" data-del="${idx}" aria-label="刪除這則問題">刪除</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  listEl.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const item = list[Number(btn.dataset.copy)];
+      if(!item) return;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(item.text).catch(()=> alert(item.text));
+      } else {
+        alert(item.text);
+      }
+    });
+  });
+  listEl.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const cur = loadQNotes();
+      cur.splice(Number(btn.dataset.del), 1);
+      saveQNotes(cur);
+      renderQNotes();
+    });
+  });
+}
+
+function toggleQPanel(open){
+  const panel = document.getElementById('q-panel');
+  const btn = document.getElementById('q-fab-btn');
+  const isOpen = (typeof open === 'boolean') ? open : !panel.classList.contains('open');
+  panel.classList.toggle('open', isOpen);
+  panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  if(isOpen) renderQNotes();
+}
+
+document.getElementById('q-fab-btn').addEventListener('click', ()=> toggleQPanel());
+document.getElementById('q-note-save-btn').addEventListener('click', ()=>{
+  const input = document.getElementById('q-note-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const list = loadQNotes();
+  list.push({ text, time: new Date().toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) });
+  saveQNotes(list);
+  input.value = '';
+  renderQNotes();
+});
+document.addEventListener('click', (e)=>{
+  const panel = document.getElementById('q-panel');
+  const fab = document.getElementById('q-fab-btn');
+  if(!panel.classList.contains('open')) return;
+  if(panel.contains(e.target) || fab.contains(e.target)) return;
+  toggleQPanel(false);
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') toggleQPanel(false);
+});
+
 /* ---------- INIT ---------- */
 updateSlowBtn();
 renderDailyGoal();
 updateNavBadges();
 renderKana();
+renderQNotes();
 </script>
 
 </body>
