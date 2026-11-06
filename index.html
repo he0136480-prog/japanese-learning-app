@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>我的日文學習程式</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#c96f4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="日文學習">
 <style>
   :root{
     --bg:#f6f1e9;
@@ -3652,6 +3659,11 @@ renderDailyGoal();
 updateNavBadges();
 renderKana();
 renderQNotes();
+
+/* ---------- 離線支援（只有放在網站上才啟用，本機開檔不啟用） ---------- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 </script>
 
 </body>
