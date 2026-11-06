@@ -760,7 +760,9 @@
   .class-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
   .class-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
   .class-text{ min-width:0; }
-  .class-jp{ font-family:var(--serif); font-size:1.08rem; line-height:1.5; }
+  .class-jp{ font-family:var(--serif); font-size:1.12rem; line-height:2.3; }
+  .class-section ruby{ ruby-position:under; -webkit-ruby-position:after; }
+  .class-section rt{ font-size:.72em; font-weight:400; color:var(--ink); opacity:.85; }
   .class-romaji{ color:var(--accent); font-size:.88rem; font-weight:400; }
   .class-zh{ color:var(--ink-soft); font-size:.88rem; margin-top:2px; }
   .class-btns{ display:flex; gap:6px; flex:none; }
@@ -1764,7 +1766,7 @@ const CLASS_LESSONS = [
 "date": "2026/11/3（二）",
 "sections": [
 {
-"title": "基本用語",
+"title": "{基本|きほん}{用語|ようご}",
 "romaji": "kihon yōgo",
 "items": [
 {
@@ -1774,7 +1776,7 @@ const CLASS_LESSONS = [
 "say": "ありがとうございます"
 },
 {
-"jp": "大丈夫（だいじょうぶ）です。",
+"jp": "{大丈夫|だいじょうぶ}です。",
 "romaji": "daijōbu desu",
 "zh": "沒關係／不用了",
 "say": "大丈夫です"
@@ -1786,13 +1788,13 @@ const CLASS_LESSONS = [
 "say": "いらないです"
 },
 {
-"jp": "お願（ねが）いします。",
+"jp": "お{願|ねが}いします。",
 "romaji": "onegai shimasu",
 "zh": "麻煩你了",
 "say": "お願いします"
 },
 {
-"jp": "もう一度（いちど）お願いします。",
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
 "romaji": "mō ichido onegai shimasu",
 "zh": "麻煩再說一次",
 "say": "もう一度お願いします"
@@ -1812,53 +1814,53 @@ const CLASS_LESSONS = [
 ]
 },
 {
-"title": "お会計（おかいけい）結帳",
+"title": "お{会計|かいけい} 結帳",
 "romaji": "okaikei",
 "items": [
 {
-"jp": "お袋（おふくろ）はご利用（ごりよう）ですか？",
+"jp": "お{袋|ふくろ}はご{利用|りよう}ですか？",
 "romaji": "ofukuro wa goriyō desu ka",
 "zh": "需要袋子嗎？",
 "say": "おふくろはご利用ですか"
 },
 {
-"jp": "レジ袋（レジぶくろ）",
+"jp": "レジ{袋|ぶくろ}",
 "romaji": "reji-bukuro",
 "zh": "購物袋",
 "say": "レジ袋"
 },
 {
-"jp": "はい、（一つ）お願いします。",
+"jp": "はい、（{一|ひと}つ）お{願|ねが}いします。",
 "romaji": "hai, hitotsu onegai shimasu",
 "zh": "好，（一個）麻煩了",
 "say": "はい、ひとつお願いします"
 },
 {
-"jp": "大丈夫です。",
+"jp": "{大丈夫|だいじょうぶ}です。",
 "romaji": "daijōbu desu",
 "zh": "不用了",
 "say": "大丈夫です"
 },
 {
-"jp": "支払い方法（しはらいほうほう）",
+"jp": "{支払|しはら}い{方法|ほうほう}",
 "romaji": "shiharai hōhō",
 "zh": "付款方式",
 "say": "支払い方法"
 },
 {
-"jp": "カードでお願いします",
+"jp": "カードでお{願|ねが}いします",
 "romaji": "kādo de onegai shimasu",
 "zh": "我刷卡",
 "say": "カードでお願いします"
 },
 {
-"jp": "Suicaで",
+"jp": "{Suica|スイカ}で",
 "romaji": "suika de",
 "zh": "用 Suica",
 "say": "スイカで"
 },
 {
-"jp": "現金（げんきん）で",
+"jp": "{現金|げんきん}で",
 "romaji": "genkin de",
 "zh": "付現金",
 "say": "現金で"
@@ -1866,53 +1868,53 @@ const CLASS_LESSONS = [
 ]
 },
 {
-"title": "食事（しょくじ）用餐",
+"title": "{食事|しょくじ} 用餐",
 "romaji": "shokuji",
 "items": [
 {
-"jp": "何名様（なんめいさま）ですか？",
+"jp": "{何名様|なんめいさま}ですか？",
 "romaji": "nanmei-sama desu ka",
 "zh": "請問幾位？",
 "say": "なんめいさまですか"
 },
 {
-"jp": "二名（にめい）です。",
+"jp": "{二名|にめい}です。",
 "romaji": "nimei desu",
 "zh": "兩位",
 "say": "二名です"
 },
 {
-"jp": "2人（ふたり）です。",
+"jp": "{2人|ふたり}です。",
 "romaji": "futari desu",
 "zh": "兩個人",
 "say": "二人です"
 },
 {
-"jp": "6人（ろくにん）",
+"jp": "{6人|ろくにん}",
 "romaji": "rokunin",
 "zh": "六個人",
 "say": "六人"
 },
 {
-"jp": "店内（てんない）で",
+"jp": "{店内|てんない}で",
 "romaji": "tennai de",
 "zh": "內用",
 "say": "店内で"
 },
 {
-"jp": "持ち帰り（もちかえり）で",
+"jp": "{持|も}ち{帰|かえ}りで",
 "romaji": "mochikaeri de",
 "zh": "外帶",
 "say": "持ち帰りで"
 },
 {
-"jp": "予約（よやく）した〇〇です",
+"jp": "{予約|よやく}した〇〇です",
 "romaji": "yoyaku shita ○○ desu",
 "zh": "我是有預約的〇〇",
 "say": "予約した、まるまるです"
 },
 {
-"jp": "注文（ちゅうもん）",
+"jp": "{注文|ちゅうもん}",
 "romaji": "chūmon",
 "zh": "點餐",
 "say": "注文"
@@ -1924,43 +1926,43 @@ const CLASS_LESSONS = [
 "say": "これとこれ"
 },
 {
-"jp": "以上（いじょう）で",
+"jp": "{以上|いじょう}で",
 "romaji": "ijō de",
 "zh": "這樣就好",
 "say": "以上で"
 },
 {
-"jp": "飲み物（のみもの）はありますか",
+"jp": "{飲|の}み{物|もの}はありますか",
 "romaji": "nomimono wa arimasu ka",
 "zh": "有飲料嗎？",
 "say": "飲み物はありますか"
 },
 {
-"jp": "お水（みず）ください",
+"jp": "お{水|みず}ください",
 "romaji": "omizu kudasai",
 "zh": "請給我水",
 "say": "お水ください"
 },
 {
-"jp": "氷無し（こおりなし）で",
+"jp": "{氷|こおり}{無|な}しで",
 "romaji": "kōri nashi de",
 "zh": "不要冰",
 "say": "氷なしで"
 },
 {
-"jp": "〇〇抜き（ぬき）で",
+"jp": "〇〇{抜|ぬ}きで",
 "romaji": "○○ nuki de",
 "zh": "不要加〇〇",
 "say": "まるまる、抜きで"
 },
 {
-"jp": "卵の黄身（たまごのきみ）",
+"jp": "{卵|たまご}の{黄身|きみ}",
 "romaji": "tamago no kimi",
 "zh": "蛋黃",
 "say": "卵の黄身"
 },
 {
-"jp": "お会計（おかいけい）をお願いします",
+"jp": "お{会計|かいけい}をお{願|ねが}いします",
 "romaji": "okaikei o onegai shimasu",
 "zh": "麻煩結帳",
 "say": "お会計をお願いします"
@@ -1972,25 +1974,25 @@ const CLASS_LESSONS = [
 "romaji": "hoteru",
 "items": [
 {
-"jp": "チェックインをお願いします",
+"jp": "チェックインをお{願|ねが}いします",
 "romaji": "chekkuin o onegai shimasu",
 "zh": "我要辦入住",
 "say": "チェックインをお願いします"
 },
 {
-"jp": "チェックインの時間（じかん）前（まえ）ですが、先（さき）に荷物（にもつ）を預（あず）けてもいいですか？",
+"jp": "チェックインの{時間|じかん}{前|まえ}ですが、{先|さき}に{荷物|にもつ}を{預|あず}けてもいいですか？",
 "romaji": "chekkuin no jikan mae desu ga, saki ni nimotsu o azukete mo ii desu ka",
 "zh": "還沒到入住時間，可以先寄放行李嗎？",
 "say": "チェックインの時間前ですが、さきに荷物を預けてもいいですか"
 },
 {
-"jp": "喫煙（きつえん）はいけません",
+"jp": "{喫煙|きつえん}はいけません",
 "romaji": "kitsuen wa ikemasen",
 "zh": "不可以吸菸",
 "say": "喫煙はいけません"
 },
 {
-"jp": "禁止（きんし）です",
+"jp": "{禁止|きんし}です",
 "romaji": "kinshi desu",
 "zh": "禁止",
 "say": "禁止です"
@@ -2002,7 +2004,7 @@ const CLASS_LESSONS = [
 "say": "タオル"
 },
 {
-"jp": "歯磨き（はみがき）",
+"jp": "{歯磨|はみが}き",
 "romaji": "hamigaki",
 "zh": "刷牙／牙膏",
 "say": "歯磨き"
@@ -2010,17 +2012,17 @@ const CLASS_LESSONS = [
 ]
 },
 {
-"title": "お買い物（おかいもの）購物",
+"title": "お{買|か}い{物|もの} 購物",
 "romaji": "okaimono",
 "items": [
 {
-"jp": "試着（しちゃく）してもいいですか",
+"jp": "{試着|しちゃく}してもいいですか",
 "romaji": "shichaku shite mo ii desu ka",
 "zh": "可以試穿嗎？",
 "say": "試着してもいいですか"
 },
 {
-"jp": "この商品（しょうひん）を探（さが）したいんですけど…",
+"jp": "この{商品|しょうひん}を{探|さが}したいんですけど…",
 "romaji": "kono shōhin o sagashitai n desu kedo",
 "zh": "我想找這個商品…",
 "say": "この商品を探したいんですけど"
@@ -2032,49 +2034,49 @@ const CLASS_LESSONS = [
 "say": "どこにありますか"
 },
 {
-"jp": "他（ほか）のサイズはありますか",
+"jp": "{他|ほか}のサイズはありますか",
 "romaji": "hoka no saizu wa arimasu ka",
 "zh": "有其他尺寸嗎？",
 "say": "他のサイズはありますか"
 },
 {
-"jp": "色（いろ）",
+"jp": "{色|いろ}",
 "romaji": "iro",
 "zh": "顏色",
 "say": "いろ"
 },
 {
-"jp": "白（しろ）",
+"jp": "{白|しろ}",
 "romaji": "shiro",
 "zh": "白色",
 "say": "しろ"
 },
 {
-"jp": "黒（くろ）",
+"jp": "{黒|くろ}",
 "romaji": "kuro",
 "zh": "黑色",
 "say": "くろ"
 },
 {
-"jp": "灰色（はいいろ）",
+"jp": "{灰色|はいいろ}",
 "romaji": "haiiro",
 "zh": "灰色",
 "say": "はいいろ"
 },
 {
-"jp": "S（エス）、M（エム）、L（エル）",
+"jp": "{S|エス}、{M|エム}、{L|エル}",
 "romaji": "esu, emu, eru",
 "zh": "",
 "say": "エス、エム、エル"
 },
 {
-"jp": "在庫（ざいこ）はありますか",
+"jp": "{在庫|ざいこ}はありますか",
 "romaji": "zaiko wa arimasu ka",
 "zh": "有庫存嗎？",
 "say": "在庫はありますか"
 },
 {
-"jp": "ちょっと考（かんが）えます",
+"jp": "ちょっと{考|かんが}えます",
 "romaji": "chotto kangaemasu",
 "zh": "我再考慮一下",
 "say": "ちょっと考えます"
@@ -2086,7 +2088,7 @@ const CLASS_LESSONS = [
 "say": "これをください"
 },
 {
-"jp": "免税（めんぜい）できますか",
+"jp": "{免税|めんぜい}できますか",
 "romaji": "menzei dekimasu ka",
 "zh": "可以免稅嗎？",
 "say": "免税できますか"
@@ -2094,29 +2096,29 @@ const CLASS_LESSONS = [
 ]
 },
 {
-"title": "駅（えき）車站",
+"title": "{駅|えき} 車站",
 "romaji": "eki",
 "items": [
 {
-"jp": "〇〇駅まで",
+"jp": "〇〇{駅|えき}まで",
 "romaji": "○○ eki made",
 "zh": "到〇〇站",
 "say": "まるまる駅まで"
 },
 {
-"jp": "番線（ばんせん）",
+"jp": "{番線|ばんせん}",
 "romaji": "bansen",
 "zh": "第幾月台",
 "say": "番線"
 },
 {
-"jp": "乗り換え（のりかえ）",
+"jp": "{乗|の}り{換|か}え",
 "romaji": "norikae",
 "zh": "轉乘",
 "say": "乗り換え"
 },
 {
-"jp": "各駅停車（かくえきていしゃ）",
+"jp": "{各駅停車|かくえきていしゃ}",
 "romaji": "kakueki teisha",
 "zh": "每站都停的列車",
 "say": "各駅停車"
@@ -2161,6 +2163,10 @@ function playClassSection(btn, items){
   };
   if(wasPlaying) setTimeout(next, 60); else next();
 }
+// {漢字|よみ} 轉成漢字正下方標假名的 ruby
+function classRuby(s){
+  return esc(s).replace(/\{([^|{}]+)\|([^|{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
+}
 function renderClass(){
   const area = document.getElementById('class-area');
   if(area.dataset.ready) return;
@@ -2171,13 +2177,13 @@ function renderClass(){
     ${l.sections.map((s,si)=>`
       <div class="card class-section">
         <div class="class-head">
-          <div><b>${esc(s.title)}</b> <span class="class-romaji">${esc(s.romaji)}</span></div>
+          <div><b lang="ja">${classRuby(s.title)}</b> <span class="class-romaji">${esc(s.romaji)}</span></div>
           <button class="action btn-ghost class-playall" data-l="${li}" data-s="${si}">▶ 整段跟讀</button>
         </div>
         ${s.items.map((it,ii)=>`
           <div class="class-row">
             <div class="class-text">
-              <div class="class-jp" lang="ja">${esc(it.jp)}</div>
+              <div class="class-jp" lang="ja">${classRuby(it.jp)}</div>
               <div class="class-romaji">${esc(it.romaji)}</div>
               ${it.zh?`<div class="class-zh">${esc(it.zh)}</div>`:''}
             </div>
