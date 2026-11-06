@@ -785,13 +785,23 @@
   .class-recite-prompt{ font-size:1.25rem; font-weight:700; margin:10px 0 18px; }
   .class-recite .class-jp{ font-size:1.35rem; }
   .class-recite-btns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+  .class-exam-stem{ font-size:1.35rem; margin:8px 0 14px; }
+  .class-exam-options{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .class-exam-option{ font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; text-align:left; cursor:pointer; transition:border-color .15s ease; }
+  .class-exam-option:hover:not(:disabled){ border-color:var(--accent); }
+  .class-exam-option:disabled{ cursor:default; }
+  .class-exam-option.right{ border:2px solid var(--good); background:var(--good-soft); }
+  .class-exam-option.wrong{ border:2px solid var(--bad); background:var(--bad-soft); }
+  .class-exam-answer{ margin-top:16px; }
+  .class-exam-score{ font-family:var(--serif); font-size:3.2rem; font-weight:700; color:var(--accent); line-height:1.2; margin:8px 0; }
+  .class-exam-score span{ font-size:1rem; font-weight:400; }
   .class-title{ font-family:var(--serif); margin:0 0 6px; }
   .class-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
   .class-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
   .class-text{ min-width:0; }
   .class-jp{ font-family:var(--serif); font-size:1.12rem; line-height:2.3; }
-  .class-section ruby{ ruby-position:under; -webkit-ruby-position:after; }
-  .class-section rt{ font-size:.72em; font-weight:400; color:var(--ink); opacity:.85; }
+  .class-jp ruby, .class-section ruby{ ruby-position:under; -webkit-ruby-position:after; }
+  .class-jp rt, .class-section rt{ font-size:.72em; font-weight:400; color:var(--ink); opacity:.85; }
   .class-romaji{ color:var(--accent); font-size:.88rem; font-weight:400; }
   .class-zh{ color:var(--ink-soft); font-size:.88rem; margin-top:2px; }
   .class-btns{ display:flex; gap:6px; flex:none; }
@@ -2436,6 +2446,7 @@ function classHomeHTML(){
     <h2 class="class-title">每天的日文會話</h2>
     <div class="sub" style="margin-bottom:14px;">點一格，就能看當天要學的句子。</div>
     ${due ? `<div class="card class-review"><div><b>今天該複習 ${due} 句</b><div class="class-zh">之前背過、到期要再看的句子</div></div><button class="action btn-primary" data-review="1">開始複習</button></div>` : ''}
+    <div class="card class-review"><div><b>綜合考試</b><div class="class-zh">從已上過的內容隨機抽 ${Math.min(CLASS_EXAM_SIZE, classExamPool(classExamLessons()).length)} 題${classExamBest('all') !== null ? `・最高 ${classExamBest('all')} 分` : ''}</div></div><button class="action btn-ghost" data-exam-all="1">開始考試</button></div>
     <div class="class-grid">
       ${classSorted().map(l => {
         const n = classItems(l).length, k = classKnown(p, l), isToday = l.date === today;
@@ -2454,7 +2465,10 @@ function classLessonHTML(l){
     <button class="class-back" data-back="1">← 所有會話</button>
     <h2 class="class-title">${esc(classDateLabel(l.date))} ${esc(l.title)}</h2>
     <div class="sub" style="margin-bottom:14px;">${l.note ? esc(l.note) : ''}長音寫成 ō、ū，要拉長一拍；〇〇 唸 marumaru，實際使用時換成名字或站名。</div>
-    <div class="class-actions"><button class="action btn-primary" data-recite="${esc(l.id)}">開始背誦</button></div>
+    <div class="class-actions">
+      <button class="action btn-primary" data-recite="${esc(l.id)}">開始背誦</button>
+      <button class="action btn-ghost" data-exam="${esc(l.id)}">考試${classExamBest(l.id) !== null ? `（最高 ${classExamBest(l.id)} 分）` : ''}</button>
+    </div>
     ${l.sections.map((s, si) => `
       <div class="card class-section">
         <div class="class-head">
@@ -2510,11 +2524,176 @@ function classReciteHTML(v){
   </div>`;
 }
 
+/* ---------- 上課複習：考試 ---------- */
+const LS_CLASS_EXAM = 'jl_class_exam';
+function loadClassExams(){ return JSON.parse(localStorage.getItem(LS_CLASS_EXAM) || '[]'); }
+function saveClassExams(h){ localStorage.setItem(LS_CLASS_EXAM, JSON.stringify(h)); }
+const CLASS_EXAM_SIZE = 20;
+// 意思太接近、不能同時當選項的句子（比對 say 欄位）
+const CLASS_EXAM_CONFLICTS = [
+  ['大丈夫です','いらないです','袋はいらないです','温めなくて大丈夫です'],
+  ['にめいです','ふたりです'],
+  ['番線','なんばんせんですか']
+];
+function classExamConflict(a, b){
+  if(a.jp === b.jp || a.zh === b.zh) return true;
+  return CLASS_EXAM_CONFLICTS.some(g => g.includes(a.say) && g.includes(b.say));
+}
+// 考「已上過」的內容：老師上的課，加上日期已到的延伸練習
+function classExamLessons(){
+  const today = todayStr();
+  return CLASS_LESSONS.filter(l => l.tag === '老師上課' || l.date <= today);
+}
+function classExamPool(lessons){
+  const seen = new Set();
+  return lessons.flatMap(classItems).filter(x => {
+    if(!x.it.zh || seen.has(x.it.jp)) return false; // 沒有中文意思的（如 S、M、L）不出題；重複的句子只考一次
+    seen.add(x.it.jp);
+    return true;
+  });
+}
+function classExamQuestions(targets, pool){
+  const canListen = 'speechSynthesis' in window;
+  const types = canListen ? ['zh2jp','jp2zh','listen'] : ['zh2jp','jp2zh'];
+  return targets.map((x, i) => {
+    const wrong = [];
+    for(const c of shuffle(pool)){
+      if(wrong.length === 3) break;
+      if(classExamConflict(c.it, x.it) || wrong.some(w => classExamConflict(w, c.it))) continue;
+      wrong.push(c.it);
+    }
+    return {x, type:types[i % types.length], options:shuffle([x.it, ...wrong])};
+  });
+}
+function classExamStart(lessons, title, from){
+  const pool = classExamPool(lessons);
+  const targets = shuffle(pool).slice(0, CLASS_EXAM_SIZE);
+  classExamBegin({title, from, pool, qs:shuffle(classExamQuestions(targets, pool)), isRetry:false});
+}
+function classExamBegin(o){
+  classGo({name:'exam', ...o, idx:0, picked:null, correct:0, wrong:[], saved:false});
+  classExamAutoplay();
+}
+function classExamAutoplay(){
+  const v = classView;
+  const q = v.qs[v.idx];
+  if(q && q.type === 'listen') speak(q.x.it.say);
+}
+function classExamBest(id){
+  const scores = loadClassExams().filter(e => e.id === id).map(e => e.score);
+  return scores.length ? Math.max(...scores) : null;
+}
+function classExamHTML(v){
+  const back = `<button class="class-back" data-back="1">← 離開考試</button>`;
+  if(v.idx >= v.qs.length) return classExamResultHTML(v);
+  const q = v.qs[v.idx], it = q.x.it, done = v.picked !== null;
+  const stem = {
+    zh2jp:`<div class="class-zh">這句的日文是？</div><div class="class-recite-prompt">${esc(it.zh)}</div>`,
+    jp2zh:`<div class="class-zh">這句的意思是？</div><div class="class-jp class-exam-stem" lang="ja">${classRuby(it.jp)}</div>`,
+    listen:`<div class="class-zh">聽發音，選出意思</div>
+      <div class="class-recite-btns" style="margin:10px 0 16px;">
+        <button class="action btn-ghost" data-exam-say="1">🔊 再聽一次</button>
+        <button class="action btn-ghost" data-exam-say="slow">🐢 慢速</button>
+      </div>`
+  }[q.type];
+  return `${back}<div class="card class-recite">
+    <div class="class-zh">第 ${v.idx + 1} / ${v.qs.length} 題</div>
+    ${stem}
+    <div class="class-exam-options">
+      ${q.options.map((o, i) => {
+        const cls = done ? (o === it ? ' right' : (i === v.picked ? ' wrong' : '')) : '';
+        const label = q.type === 'zh2jp' ? `<span class="class-jp" lang="ja">${classRuby(o.jp)}</span>` : esc(o.zh);
+        return `<button class="class-exam-option${cls}" data-exam-pick="${i}"${done ? ' disabled' : ''}>${label}</button>`;
+      }).join('')}
+    </div>
+    ${done ? `
+      <div class="class-exam-answer">
+        <div><b>${q.options[v.picked] === it ? '答對了' : '答錯了'}</b></div>
+        <div class="class-jp" lang="ja">${classRuby(it.jp)}</div>
+        <div class="class-romaji">${esc(it.romaji)}</div>
+        <div class="class-zh">${esc(it.zh)}</div>
+      </div>
+      <div class="class-recite-btns">
+        <button class="action btn-ghost" data-exam-say="1">🔊 聽發音</button>
+        <button class="action btn-primary" data-exam-next="1">${v.idx + 1 < v.qs.length ? '下一題' : '看成績'}</button>
+      </div>` : ''}
+  </div>`;
+}
+function classExamResultHTML(v){
+  const total = v.qs.length, score = Math.round(v.correct / total * 100);
+  if(!v.saved && !v.isRetry){
+    const hist = loadClassExams();
+    hist.unshift({id:v.from || 'all', title:v.title, date:todayStr(), score, correct:v.correct, total});
+    saveClassExams(hist.slice(0, 50));
+  }
+  v.saved = true;
+  const msg = score === 100 ? '全對！' : score >= 80 ? '通過了，繼續保持' : '再複習一下，你可以的';
+  return `<button class="class-back" data-back="1">← 回去</button>
+    <div class="card class-recite">
+      <div class="class-zh">${esc(v.title)}${v.isRetry ? '・錯題重考' : ''}</div>
+      <div class="class-exam-score">${score}<span> 分</span></div>
+      <div class="class-zh">答對 ${v.correct} / ${total} 題・${msg}</div>
+      <div class="class-recite-btns">
+        ${v.wrong.length ? `<button class="action btn-primary" data-exam-retry="1">再考錯的 ${v.wrong.length} 題</button>` : ''}
+        <button class="action btn-ghost" data-back="1">完成</button>
+      </div>
+    </div>
+    ${v.wrong.length ? `<div class="card class-section"><b>答錯的句子</b>
+      <div class="class-zh" style="margin-top:4px;">這些句子明天會出現在「今天該複習」。</div>
+      ${v.wrong.map((x, i) => `
+        <div class="class-row">
+          <div class="class-text">
+            <div class="class-jp" lang="ja">${classRuby(x.it.jp)}</div>
+            <div class="class-romaji">${esc(x.it.romaji)}</div>
+            <div class="class-zh">${esc(x.it.zh)}</div>
+          </div>
+          <div class="class-btns"><button class="icon-btn" data-exam-wrong-say="${i}" aria-label="播放發音" title="播放發音">🔊</button></div>
+        </div>`).join('')}
+    </div>` : ''}`;
+}
+function onClassExamClick(t, v){
+  if(t.dataset.examPick !== undefined){
+    if(v.picked !== null) return true;
+    v.picked = Number(t.dataset.examPick);
+    const q = v.qs[v.idx];
+    if(q.options[v.picked] === q.x.it){
+      v.correct++;
+    } else {
+      v.wrong.push(q.x);
+      const p = loadClassProgress();
+      p[classKey(q.x.l, q.x.it)] = {box:1, next:addDays(todayStr(), 1)};
+      saveClassProgress(p);
+    }
+    markStudied();
+    incrementDailyCount();
+    renderClass();
+    speak(q.x.it.say);
+    return true;
+  }
+  if(t.dataset.examNext){
+    v.idx++;
+    v.picked = null;
+    stopClassPlay();
+    renderClass();
+    window.scrollTo(0, 0);
+    classExamAutoplay();
+    return true;
+  }
+  if(t.dataset.examSay){ speak(v.qs[v.idx].x.it.say, t.dataset.examSay === 'slow'); return true; }
+  if(t.dataset.examWrongSay !== undefined){ speak(v.wrong[t.dataset.examWrongSay].it.say); return true; }
+  if(t.dataset.examRetry){
+    classExamBegin({title:v.title, from:v.from, pool:v.pool, qs:shuffle(classExamQuestions(v.wrong, v.pool)), isRetry:true});
+    return true;
+  }
+  return false;
+}
+
 function renderClass(){
   const area = document.getElementById('class-area');
   const v = classView;
   if(v.name === 'lesson') area.innerHTML = classLessonHTML(CLASS_LESSONS.find(l => l.id === v.id));
   else if(v.name === 'recite') area.innerHTML = classReciteHTML(v);
+  else if(v.name === 'exam') area.innerHTML = classExamHTML(v);
   else area.innerHTML = classHomeHTML();
   if(area.dataset.ready) return;
   area.dataset.ready = '1';
@@ -2533,7 +2712,14 @@ function onClassClick(e){
   if(!t) return;
   const v = classView;
   if(t.dataset.open){ classGo({name:'lesson', id:t.dataset.open}); return; }
-  if(t.dataset.back){ classGo(v.name === 'recite' && v.from ? {name:'lesson', id:v.from} : {name:'home'}); return; }
+  if(t.dataset.back){ classGo((v.name === 'recite' || v.name === 'exam') && v.from ? {name:'lesson', id:v.from} : {name:'home'}); return; }
+  if(v.name === 'exam' && onClassExamClick(t, v)) return;
+  if(t.dataset.examAll){ classExamStart(classExamLessons(), '綜合考試', null); return; }
+  if(t.dataset.exam){
+    const l = CLASS_LESSONS.find(x => x.id === t.dataset.exam);
+    classExamStart([l], `${classDateLabel(l.date)} ${l.title}`, l.id);
+    return;
+  }
   if(t.dataset.recite){
     const l = CLASS_LESSONS.find(x => x.id === t.dataset.recite);
     classGo({name:'recite', queue:classItems(l), idx:0, revealed:false, from:l.id});
@@ -2583,11 +2769,13 @@ function renderClassProgress(){
   const total = CLASS_LESSONS.reduce((n, l) => n + classItems(l).length, 0);
   const known = CLASS_LESSONS.reduce((n, l) => n + classKnown(p, l), 0);
   const ask = CLASS_LESSONS.flatMap(l => l.ask);
+  const exams = loadClassExams().slice(0, 5);
   document.getElementById('class-progress-area').innerHTML = `
     <div class="card class-section">
       <b>上課會話</b>
       <div class="class-zh" style="margin:6px 0 8px;">已會 ${known} / ${total} 句</div>
       <div class="class-bar"><i style="width:${total ? Math.round(known / total * 100) : 0}%"></i></div>
+      ${exams.length ? `<div style="margin-top:16px;"><b>最近的考試</b>${exams.map(e => `<div class="class-zh" style="margin-top:6px;">${esc(e.date)}　${esc(e.title)}　${e.score} 分（${e.correct}/${e.total}）</div>`).join('')}</div>` : ''}
       ${ask.length ? `<div style="margin-top:16px;"><b>下次問老師</b>${ask.map(a => `<div class="class-zh" style="margin-top:6px;">${esc(a)}</div>`).join('')}</div>` : ''}
     </div>`;
 }
@@ -3880,6 +4068,7 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     questionNotes: loadQNotes(),
     kanaMisses: loadKanaMisses(),
     classProgress: loadClassProgress(),
+    classExams: loadClassExams(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -3930,6 +4119,7 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       if(Array.isArray(data.questionNotes)) saveQNotes(data.questionNotes);
       if(data.kanaMisses) saveKanaMisses(data.kanaMisses);
       if(data.classProgress) saveClassProgress(data.classProgress);
+      if(Array.isArray(data.classExams)) saveClassExams(data.classExams);
       renderQNotes();
       resetForm();
       renderManage();
