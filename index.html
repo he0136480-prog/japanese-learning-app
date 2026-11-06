@@ -763,6 +763,28 @@
     .celebration-toast{ transition:opacity .2s ease; }
     .celebration-toast.show{ animation:none; transform:translateX(-50%) translateY(0); }
   }
+  #top-nav{ margin-bottom:0; }
+  #self-nav{ margin-top:8px; }
+  .top-btn{ flex:1; border:none; background:none; padding:11px 8px; font-size:.95rem; font-weight:700; color:var(--accent-2); cursor:pointer; border-radius:11px; white-space:nowrap; transition:background .18s ease, color .18s ease; }
+  .top-btn:hover{ color:var(--accent); }
+  .top-btn.active{ background:var(--card); color:var(--accent); box-shadow:var(--shadow-sm); }
+  .class-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-bottom:16px; }
+  .class-card{ display:flex; flex-direction:column; gap:6px; text-align:left; font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; cursor:pointer; box-shadow:var(--shadow-sm); transition:transform .15s ease, border-color .15s ease; }
+  .class-card:hover{ transform:translateY(-2px); border-color:var(--accent); }
+  .class-card.today{ border:2px solid var(--accent); }
+  .class-card-date{ font-size:.82rem; color:var(--ink-soft); }
+  .class-card-today{ color:var(--accent); font-weight:700; }
+  .class-card-title{ font-family:var(--serif); font-size:1.08rem; font-weight:700; line-height:1.35; flex:1; }
+  .class-card-meta{ font-size:.8rem; color:var(--ink-soft); }
+  .class-bar{ height:5px; border-radius:3px; background:var(--line); overflow:hidden; }
+  .class-bar > i{ display:block; height:100%; background:var(--good); }
+  .class-review{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .class-back{ border:none; background:none; color:var(--accent); font:inherit; font-weight:600; padding:4px 0; margin-bottom:10px; cursor:pointer; }
+  .class-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .class-recite{ text-align:center; padding:28px 20px; }
+  .class-recite-prompt{ font-size:1.25rem; font-weight:700; margin:10px 0 18px; }
+  .class-recite .class-jp{ font-size:1.35rem; }
+  .class-recite-btns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
   .class-title{ font-family:var(--serif); margin:0 0 6px; }
   .class-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
   .class-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
@@ -803,22 +825,27 @@
   </div>
 </header>
 
-<nav role="tablist" aria-label="主要功能分頁">
-  <button class="tab-btn active" data-tab="kana" role="tab" aria-selected="true">50音・基礎訓練</button>
-  <button class="tab-btn" data-tab="class" role="tab" aria-selected="false">日文課</button>
+<nav id="top-nav" aria-label="主要功能">
+  <button class="top-btn active" data-top="class">上課複習</button>
+  <button class="top-btn" data-top="self">自學</button>
+  <button class="top-btn" data-top="progress">我的進度</button>
+</nav>
+<nav id="self-nav" role="tablist" aria-label="自學項目" style="display:none;">
+  <button class="tab-btn active" data-tab="class" role="tab" aria-selected="true" style="display:none;">上課複習</button>
+  <button class="tab-btn" data-tab="kana" role="tab" aria-selected="false">50音・基礎訓練</button>
   <button class="tab-btn" data-tab="grammar" role="tab" aria-selected="false">文法邏輯</button>
   <button class="tab-btn" data-tab="flash" role="tab" aria-selected="false">單字卡</button>
   <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">小測驗</button>
   <button class="tab-btn" data-tab="reading" role="tab" aria-selected="false">閱讀</button>
   <button class="tab-btn" data-tab="idioms" role="tab" aria-selected="false">慣用句・ことわざ</button>
-  <button class="tab-btn" data-tab="progress" role="tab" aria-selected="false">學習進度</button>
   <button class="tab-btn" data-tab="manage" role="tab" aria-selected="false">單字庫管理</button>
+  <button class="tab-btn" data-tab="progress" role="tab" aria-selected="false" style="display:none;">學習進度</button>
 </nav>
 
 <main>
 
   <!-- 50音・日語基礎訓練 (預設首頁) -->
-  <section class="panel active" id="panel-kana" role="tabpanel" aria-label="50音・基礎訓練">
+  <section class="panel" id="panel-kana" role="tabpanel" aria-label="50音・基礎訓練">
     <div class="sub" style="margin-bottom:14px;">從假名和最基本的招呼語開始，這是學日文的第一步</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
       <button class="action btn-ghost kana-subtab active" data-kana-tab="chart">50音圖表</button>
@@ -833,7 +860,7 @@
   </section>
 
   <!-- 日文課：每堂上課內容 -->
-  <section class="panel" id="panel-class" role="tabpanel" aria-label="日文課">
+  <section class="panel active" id="panel-class" role="tabpanel" aria-label="日文課">
     <div id="class-area"></div>
   </section>
 
@@ -879,6 +906,7 @@
 
   <!-- PROGRESS -->
   <section class="panel" id="panel-progress" role="tabpanel" aria-label="學習進度">
+    <div id="class-progress-area"></div>
     <div class="stat-row">
       <div class="stat"><div style="font-size:1.1rem;">🔥</div><div class="num" id="stat-streak">0</div><div class="label">連續學習天數</div></div>
       <div class="stat"><div style="font-size:1.1rem;">📚</div><div class="num" id="stat-total">0</div><div class="label">單字總數</div></div>
@@ -1768,9 +1796,15 @@ function speak(text, forceSlow){
 /* ---------- 日文課：每堂上課內容（新增一堂就往 CLASS_LESSONS 最前面加一筆，內容不存 localStorage） ---------- */
 const CLASS_LESSONS = [
 {
-"id": "2026-11-03",
-"title": "11/3 旅遊會話",
-"date": "2026/11/3（二）",
+"id": "class-2026-11-03",
+"date": "2026-11-03",
+"title": "旅遊會話",
+"tag": "老師上課",
+"note": "",
+"ask": [
+"「じょうず」（jōzu）寫在內用／外帶底下，是什麼情境？",
+"「ワン」（wan）寫在預約底下，是什麼意思？"
+],
 "sections": [
 {
 "title": "{基本|きほん}{用語|ようご}",
@@ -2138,22 +2172,19 @@ const CLASS_LESSONS = [
 }
 ]
 }
-],
-"ask": [
-"「じょうず」（jōzu）寫在內用／外帶底下，是什麼情境？",
-"「ワン」（wan）寫在預約底下，是什麼意思？"
 ]
 },
 {
-"id": "2026-11-03-ext",
-"title": "旅遊會話・延伸練習",
-"note": "這部分是我補充的，不是老師教的內容，用來延伸 11/3 的句型。一天 12 句就好。",
+"id": "ext-2026-11-07",
+"date": "2026-11-07",
+"title": "餐廳和超商",
+"tag": "延伸練習",
+"note": "這是我補充的延伸練習，不是老師教的內容。",
 "ask": [],
 "sections": [
 {
-"title": "第一天：餐廳和超商",
+"title": "餐廳",
 "romaji": "",
-"tip": "分清楚：温めますか？是店員問你要不要加熱；温めてください是你請對方幫忙加熱。〜をください是「請給我東西」，〜てください是「請幫我做」。",
 "items": [
 {
 "jp": "すみません。",
@@ -2202,7 +2233,14 @@ const CLASS_LESSONS = [
 "romaji": "ryōshūsho o onegai shimasu",
 "zh": "麻煩給我收據",
 "say": "領収書をお願いします"
+}
+]
 },
+{
+"title": "超商",
+"romaji": "",
+"tip": "分清楚：温めますか？是店員問你要不要加熱；温めてください是你請對方幫忙加熱。〜をください是「請給我東西」，〜てください是「請幫我做」。",
+"items": [
 {
 "jp": "{温|あたた}めてください",
 "romaji": "atatamete kudasai",
@@ -2228,11 +2266,20 @@ const CLASS_LESSONS = [
 "say": "袋はいらないです"
 }
 ]
+}
+]
 },
 {
-"title": "第二天：飯店、購物和車站",
+"id": "ext-2026-11-08",
+"date": "2026-11-08",
+"title": "飯店、購物和車站",
+"tag": "延伸練習",
+"note": "這是我補充的延伸練習，不是老師教的內容。",
+"ask": [],
+"sections": [
+{
+"title": "飯店",
 "romaji": "",
-"tip": "〜はありますか（有〜嗎）和〜はどこですか（〜在哪裡）最好用，換掉前面的單字就能問很多事。",
 "items": [
 {
 "jp": "チェックアウトをお{願|ねが}いします",
@@ -2251,7 +2298,14 @@ const CLASS_LESSONS = [
 "romaji": "waifai no pasuwādo o oshiete kudasai",
 "zh": "請告訴我 Wi-Fi 密碼",
 "say": "ワイファイのパスワードを教えてください"
+}
+]
 },
+{
+"title": "購物",
+"romaji": "",
+"tip": "〜はありますか（有〜嗎）和〜はどこですか（〜在哪裡）最好用，換掉前面的單字就能問很多事。",
+"items": [
 {
 "jp": "これはいくらですか？",
 "romaji": "kore wa ikura desu ka",
@@ -2275,7 +2329,13 @@ const CLASS_LESSONS = [
 "romaji": "mite iru dake desu",
 "zh": "我只是看看",
 "say": "見ているだけです"
+}
+]
 },
+{
+"title": "車站和問路",
+"romaji": "",
+"items": [
 {
 "jp": "トイレはどこですか？",
 "romaji": "toire wa doko desu ka",
@@ -2346,52 +2406,212 @@ function playClassSection(btn, items){
 function classRuby(s){
   return esc(s).replace(/\{([^|{}]+)\|([^|{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
 }
-function renderClass(){
-  const area = document.getElementById('class-area');
-  if(area.dataset.ready) return;
-  area.dataset.ready = '1';
-  area.innerHTML = CLASS_LESSONS.map((l,li)=>`
-    <h2 class="class-title"${li?' style="margin-top:32px;"':''}>${esc(l.title)}</h2>
-    <div class="sub" style="margin-bottom:14px;">${l.note?esc(l.note):`上課日期 ${esc(l.date)}。`}長音寫成 ō、ū，要拉長一拍；〇〇 唸 marumaru，實際使用時換成名字或站名。</div>
-    ${l.sections.map((s,si)=>`
+const LS_CLASS_PROGRESS = 'jl_class_progress';
+function loadClassProgress(){ return JSON.parse(localStorage.getItem(LS_CLASS_PROGRESS) || '{}'); }
+function saveClassProgress(p){ localStorage.setItem(LS_CLASS_PROGRESS, JSON.stringify(p)); }
+function classKey(l, it){ return l.id + '|' + it.jp; }
+function classItems(l){ return l.sections.flatMap(s => s.items.map(it => ({l, it}))); }
+function classKnown(p, l){ return classItems(l).filter(x => (p[classKey(l, x.it)]?.box || 0) >= 2).length; }
+function classDue(p){
+  const today = todayStr();
+  return CLASS_LESSONS.flatMap(classItems).filter(x => { const r = p[classKey(x.l, x.it)]; return r && r.next <= today; });
+}
+function classDateLabel(date){
+  const d = new Date(date + 'T00:00:00');
+  return `${d.getMonth()+1}/${d.getDate()}（${'日一二三四五六'[d.getDay()]}）`;
+}
+// 今天和之後的排前面（由近到遠），過去的接在後面（由新到舊）
+function classSorted(){
+  const today = todayStr();
+  const up = CLASS_LESSONS.filter(l => l.date >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = CLASS_LESSONS.filter(l => l.date < today).sort((a,b) => b.date.localeCompare(a.date));
+  return [...up, ...past];
+}
+
+let classView = {name:'home'};
+
+function classHomeHTML(){
+  const p = loadClassProgress(), today = todayStr(), due = classDue(p).length;
+  return `
+    <h2 class="class-title">每天的日文會話</h2>
+    <div class="sub" style="margin-bottom:14px;">點一格，就能看當天要學的句子。</div>
+    ${due ? `<div class="card class-review"><div><b>今天該複習 ${due} 句</b><div class="class-zh">之前背過、到期要再看的句子</div></div><button class="action btn-primary" data-review="1">開始複習</button></div>` : ''}
+    <div class="class-grid">
+      ${classSorted().map(l => {
+        const n = classItems(l).length, k = classKnown(p, l), isToday = l.date === today;
+        return `<button class="class-card${isToday ? ' today' : ''}" data-open="${esc(l.id)}">
+          <span class="class-card-date">${esc(classDateLabel(l.date))}${isToday ? ' <span class="class-card-today">今天</span>' : ''}</span>
+          <span class="class-card-title">${esc(l.title)}</span>
+          <span class="class-card-meta">${esc(l.tag)}・${n} 句<br>已會 ${k} 句</span>
+          <span class="class-bar"><i style="width:${Math.round(k / n * 100)}%"></i></span>
+        </button>`;
+      }).join('')}
+    </div>`;
+}
+
+function classLessonHTML(l){
+  return `
+    <button class="class-back" data-back="1">← 所有會話</button>
+    <h2 class="class-title">${esc(classDateLabel(l.date))} ${esc(l.title)}</h2>
+    <div class="sub" style="margin-bottom:14px;">${l.note ? esc(l.note) : ''}長音寫成 ō、ū，要拉長一拍；〇〇 唸 marumaru，實際使用時換成名字或站名。</div>
+    <div class="class-actions"><button class="action btn-primary" data-recite="${esc(l.id)}">開始背誦</button></div>
+    ${l.sections.map((s, si) => `
       <div class="card class-section">
         <div class="class-head">
-          <div><b lang="ja">${classRuby(s.title)}</b> <span class="class-romaji">${esc(s.romaji)}</span></div>
-          <button class="action btn-ghost class-playall" data-l="${li}" data-s="${si}">▶ 整段跟讀</button>
+          <div><b lang="ja">${classRuby(s.title)}</b>${s.romaji ? ` <span class="class-romaji">${esc(s.romaji)}</span>` : ''}</div>
+          <button class="action btn-ghost class-playall" data-s="${si}">▶ 整段跟讀</button>
         </div>
-        ${s.tip?`<div class="class-zh" style="margin-bottom:12px;">${esc(s.tip)}</div>`:''}
-        ${s.items.map((it,ii)=>`
+        ${s.tip ? `<div class="class-zh" style="margin-bottom:12px;">${esc(s.tip)}</div>` : ''}
+        ${s.items.map((it, ii) => `
           <div class="class-row">
             <div class="class-text">
               <div class="class-jp" lang="ja">${classRuby(it.jp)}</div>
               <div class="class-romaji">${esc(it.romaji)}</div>
-              ${it.zh?`<div class="class-zh">${esc(it.zh)}</div>`:''}
+              ${it.zh ? `<div class="class-zh">${esc(it.zh)}</div>` : ''}
             </div>
             <div class="class-btns">
-              <button class="icon-btn class-say" data-l="${li}" data-s="${si}" data-i="${ii}" aria-label="播放發音" title="播放發音">🔊</button>
-              <button class="icon-btn class-say" data-slow="1" data-l="${li}" data-s="${si}" data-i="${ii}" aria-label="慢速播放" title="慢速播放">🐢</button>
+              <button class="icon-btn class-say" data-s="${si}" data-i="${ii}" aria-label="播放發音" title="播放發音">🔊</button>
+              <button class="icon-btn class-say" data-slow="1" data-s="${si}" data-i="${ii}" aria-label="慢速播放" title="慢速播放">🐢</button>
             </div>
           </div>`).join('')}
       </div>`).join('')}
-    ${l.ask.length?`<div class="card class-section"><b>下次問老師</b>
-      ${l.ask.map(a=>`<div class="class-zh" style="margin-top:8px;">${esc(a)}</div>`).join('')}
-    </div>`:''}`).join('');
-  area.addEventListener('click', e=>{
-    const say = e.target.closest('.class-say');
-    if(say){
-      stopClassPlay();
-      const it = CLASS_LESSONS[say.dataset.l].sections[say.dataset.s].items[say.dataset.i];
-      speak(it.say, say.dataset.slow === '1');
-      return;
-    }
-    const all = e.target.closest('.class-playall');
-    if(all){
-      if(!('speechSynthesis' in window)){ speak(''); return; }
-      if(all.textContent.includes('停止')){ stopClassPlay(); return; }
-      playClassSection(all, CLASS_LESSONS[all.dataset.l].sections[all.dataset.s].items);
-    }
-  });
+    ${l.ask.length ? `<div class="card class-section"><b>下次問老師</b>
+      ${l.ask.map(a => `<div class="class-zh" style="margin-top:8px;">${esc(a)}</div>`).join('')}
+    </div>` : ''}`;
 }
+
+function classReciteHTML(v){
+  const back = `<button class="class-back" data-back="1">← 離開背誦</button>`;
+  if(v.idx >= v.queue.length){
+    return `${back}<div class="card class-recite">
+      <div class="class-recite-prompt">這輪背完了 🎉</div>
+      <div class="class-zh">不熟的句子明天會再出現，會的句子會隔久一點。</div>
+      <div class="class-recite-btns"><button class="action btn-primary" data-back="1">完成</button></div>
+    </div>`;
+  }
+  const {it} = v.queue[v.idx];
+  const prompt = it.zh || it.romaji;
+  return `${back}<div class="card class-recite">
+    <div class="class-zh">第 ${v.idx + 1} / ${v.queue.length} 句</div>
+    <div class="class-recite-prompt">${esc(prompt)}</div>
+    ${v.revealed ? `
+      <div class="class-jp" lang="ja">${classRuby(it.jp)}</div>
+      <div class="class-romaji">${esc(it.romaji)}</div>
+      <div class="class-recite-btns">
+        <button class="action btn-ghost" data-say-now="1">🔊 再聽一次</button>
+        <button class="action btn-ghost" data-say-now="slow">🐢 慢速</button>
+      </div>
+      <div class="class-recite-btns">
+        <button class="action btn-unknow" data-grade="0">不熟</button>
+        <button class="action btn-know" data-grade="1">會</button>
+      </div>` : `
+      <div class="class-zh">先在心裡或開口用日文說一次</div>
+      <div class="class-recite-btns"><button class="action btn-primary" data-reveal="1">看答案</button></div>`}
+  </div>`;
+}
+
+function renderClass(){
+  const area = document.getElementById('class-area');
+  const v = classView;
+  if(v.name === 'lesson') area.innerHTML = classLessonHTML(CLASS_LESSONS.find(l => l.id === v.id));
+  else if(v.name === 'recite') area.innerHTML = classReciteHTML(v);
+  else area.innerHTML = classHomeHTML();
+  if(area.dataset.ready) return;
+  area.dataset.ready = '1';
+  area.addEventListener('click', onClassClick);
+}
+
+function classGo(view){
+  stopClassPlay();
+  classView = view;
+  renderClass();
+  window.scrollTo(0, 0);
+}
+
+function onClassClick(e){
+  const t = e.target.closest('button');
+  if(!t) return;
+  const v = classView;
+  if(t.dataset.open){ classGo({name:'lesson', id:t.dataset.open}); return; }
+  if(t.dataset.back){ classGo(v.name === 'recite' && v.from ? {name:'lesson', id:v.from} : {name:'home'}); return; }
+  if(t.dataset.recite){
+    const l = CLASS_LESSONS.find(x => x.id === t.dataset.recite);
+    classGo({name:'recite', queue:classItems(l), idx:0, revealed:false, from:l.id});
+    return;
+  }
+  if(t.dataset.review){
+    classGo({name:'recite', queue:classDue(loadClassProgress()), idx:0, revealed:false, from:null});
+    return;
+  }
+  if(t.dataset.reveal){
+    v.revealed = true;
+    renderClass();
+    speak(v.queue[v.idx].it.say);
+    return;
+  }
+  if(t.dataset.sayNow){ speak(v.queue[v.idx].it.say, t.dataset.sayNow === 'slow'); return; }
+  if(t.dataset.grade !== undefined){
+    const cur = v.queue[v.idx], knew = t.dataset.grade === '1';
+    const p = loadClassProgress(), key = classKey(cur.l, cur.it), today = todayStr();
+    const box = knew ? Math.min((p[key]?.box || 1) + 1, 5) : 1;
+    p[key] = {box, next: addDays(today, knew ? BOX_INTERVAL_DAYS[box] : 1)};
+    saveClassProgress(p);
+    markStudied();
+    incrementDailyCount();
+    if(!knew) v.queue.push(cur); // 同一輪結束前再考一次
+    v.idx++;
+    v.revealed = false;
+    stopClassPlay();
+    renderClass();
+    return;
+  }
+  if(t.classList.contains('class-say')){
+    stopClassPlay();
+    const it = CLASS_LESSONS.find(l => l.id === v.id).sections[t.dataset.s].items[t.dataset.i];
+    speak(it.say, t.dataset.slow === '1');
+    return;
+  }
+  if(t.classList.contains('class-playall')){
+    if(!('speechSynthesis' in window)){ speak(''); return; }
+    if(t.textContent.includes('停止')){ stopClassPlay(); return; }
+    playClassSection(t, CLASS_LESSONS.find(l => l.id === v.id).sections[t.dataset.s].items);
+  }
+}
+
+function renderClassProgress(){
+  const p = loadClassProgress();
+  const total = CLASS_LESSONS.reduce((n, l) => n + classItems(l).length, 0);
+  const known = CLASS_LESSONS.reduce((n, l) => n + classKnown(p, l), 0);
+  const ask = CLASS_LESSONS.flatMap(l => l.ask);
+  document.getElementById('class-progress-area').innerHTML = `
+    <div class="card class-section">
+      <b>上課會話</b>
+      <div class="class-zh" style="margin:6px 0 8px;">已會 ${known} / ${total} 句</div>
+      <div class="class-bar"><i style="width:${total ? Math.round(known / total * 100) : 0}%"></i></div>
+      ${ask.length ? `<div style="margin-top:16px;"><b>下次問老師</b>${ask.map(a => `<div class="class-zh" style="margin-top:6px;">${esc(a)}</div>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+/* ---------- 上課複習／自學／我的進度：上層導覽 ---------- */
+let lastSelfTab = 'kana';
+function syncTopNav(){
+  const panel = document.querySelector('.panel.active');
+  if(!panel) return;
+  const tab = panel.id.replace('panel-', '');
+  const top = (tab === 'class' || tab === 'progress') ? tab : 'self';
+  if(top === 'self') lastSelfTab = tab;
+  document.querySelectorAll('.top-btn').forEach(b => b.classList.toggle('active', b.dataset.top === top));
+  document.getElementById('self-nav').style.display = top === 'self' ? '' : 'none';
+}
+document.querySelectorAll('.top-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const key = b.dataset.top;
+    if(key === 'class') classView = {name:'home'};
+    document.querySelector(`.tab-btn[data-tab="${key === 'self' ? lastSelfTab : key}"]`).click();
+  });
+});
+const topNavObserver = new MutationObserver(syncTopNav);
+document.querySelectorAll('.panel').forEach(p => topNavObserver.observe(p, {attributes:true, attributeFilter:['class']}));
 
 /* ---------- SPEECH: pronunciation check ---------- */
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3402,6 +3622,7 @@ function submitReading(r){
 
 /* ---------- PROGRESS ---------- */
 function renderProgress(){
+  renderClassProgress();
   const log = loadLog();
   document.getElementById('stat-streak').textContent = calcStreak(log);
   document.getElementById('stat-total').textContent = vocab.length;
@@ -3658,6 +3879,7 @@ document.getElementById('export-btn').addEventListener('click', ()=>{
     vocabMilestone: loadVocabMilestone(),
     questionNotes: loadQNotes(),
     kanaMisses: loadKanaMisses(),
+    classProgress: loadClassProgress(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -3707,6 +3929,7 @@ document.getElementById('import-file').addEventListener('change', (e)=>{
       if(data.vocabMilestone) saveVocabMilestone(data.vocabMilestone);
       if(Array.isArray(data.questionNotes)) saveQNotes(data.questionNotes);
       if(data.kanaMisses) saveKanaMisses(data.kanaMisses);
+      if(data.classProgress) saveClassProgress(data.classProgress);
       renderQNotes();
       resetForm();
       renderManage();
@@ -3825,6 +4048,7 @@ updateSlowBtn();
 renderDailyGoal();
 updateNavBadges();
 renderKana();
+renderClass();
 renderQNotes();
 
 /* ---------- 離線支援（只有放在網站上才啟用，本機開檔不啟用） ---------- */
