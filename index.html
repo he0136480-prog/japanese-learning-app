@@ -795,6 +795,8 @@
   .class-exam-answer{ margin-top:16px; }
   .class-exam-score{ font-family:var(--serif); font-size:3.2rem; font-weight:700; color:var(--accent); line-height:1.2; margin:8px 0; }
   .class-exam-score span{ font-size:1rem; font-weight:400; }
+  .class-role-speaker{ color:var(--accent); font-weight:700; margin-top:12px; }
+  .class-role-task{ margin:14px 0 6px; padding:12px 14px; background:var(--accent-soft); border-radius:12px; line-height:1.6; }
   .class-title{ font-family:var(--serif); margin:0 0 6px; }
   .class-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
   .class-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
@@ -2446,7 +2448,6 @@ function classHomeHTML(){
     <h2 class="class-title">每天的日文會話</h2>
     <div class="sub" style="margin-bottom:14px;">點一格，就能看當天要學的句子。</div>
     ${due ? `<div class="card class-review"><div><b>今天該複習 ${due} 句</b><div class="class-zh">之前背過、到期要再看的句子</div></div><button class="action btn-primary" data-review="1">開始複習</button></div>` : ''}
-    <div class="card class-review"><div><b>綜合考試</b><div class="class-zh">從已上過的內容隨機抽 ${Math.min(CLASS_EXAM_SIZE, classExamPool(classExamLessons()).length)} 題${classExamBest('all') !== null ? `・最高 ${classExamBest('all')} 分` : ''}</div></div><button class="action btn-ghost" data-exam-all="1">開始考試</button></div>
     <div class="class-grid">
       ${classSorted().map(l => {
         const n = classItems(l).length, k = classKnown(p, l), isToday = l.date === today;
@@ -2457,7 +2458,20 @@ function classHomeHTML(){
           <span class="class-bar"><i style="width:${Math.round(k / n * 100)}%"></i></span>
         </button>`;
       }).join('')}
-    </div>`;
+    </div>
+    <h2 class="class-title" style="margin-top:28px;">考試</h2>
+    <div class="sub" style="margin-bottom:14px;">情境對話由我扮演對方，用日文和你對答。</div>
+    <div class="class-grid">
+      ${CLASS_ROLEPLAYS.map(s => {
+        const best = classExamBest(s.id);
+        return `<button class="class-card" data-role="${esc(s.id)}">
+          <span class="class-card-date">我演${esc(s.role)}</span>
+          <span class="class-card-title">${esc(s.title)}</span>
+          <span class="class-card-meta">${s.turns.length} 回合${best !== null ? `<br>最高 ${best} 分` : ''}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <div class="card class-review"><div><b>綜合考試</b><div class="class-zh">從已上過的內容隨機抽 ${Math.min(CLASS_EXAM_SIZE, classExamPool(classExamLessons()).length)} 題${classExamBest('all') !== null ? `・最高 ${classExamBest('all')} 分` : ''}</div></div><button class="action btn-ghost" data-exam-all="1">開始考試</button></div>`;
 }
 
 function classLessonHTML(l){
@@ -2688,12 +2702,1041 @@ function onClassExamClick(t, v){
   return false;
 }
 
+/* ---------- 上課複習：情境對話考試（對方的台詞是預先寫好的劇本） ---------- */
+const CLASS_ROLEPLAYS = [
+{
+"id": "role-konbini",
+"title": "超商結帳",
+"role": "店員",
+"turns": [
+{
+"clerk": {
+"jp": "いらっしゃいませ。{温|あたた}めますか？",
+"romaji": "irasshaimase. atatamemasu ka",
+"zh": "歡迎光臨。要加熱嗎？",
+"say": "いらっしゃいませ。温めますか"
+},
+"task": "你要請店員幫你加熱",
+"ok": {
+"jp": "お{願|ねが}いします。",
+"romaji": "onegai shimasu",
+"zh": "麻煩你了",
+"say": "お願いします"
+},
+"wrong": [
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "{二名|にめい}です。",
+"romaji": "nimei desu",
+"zh": "兩位",
+"say": "にめいです"
+},
+{
+"jp": "{試着|しちゃく}してもいいですか",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+}
+]
+},
+{
+"clerk": {
+"jp": "お{袋|ふくろ}はご{利用|りよう}ですか？",
+"romaji": "ofukuro wa goriyō desu ka",
+"zh": "需要袋子嗎？",
+"say": "おふくろはご利用ですか"
+},
+"task": "你不需要袋子",
+"ok": {
+"jp": "{大丈夫|だいじょうぶ}です。",
+"romaji": "daijōbu desu",
+"zh": "沒關係／不用了",
+"say": "大丈夫です"
+},
+"wrong": [
+{
+"jp": "はい、（{一|ひと}つ）お{願|ねが}いします。",
+"romaji": "hai, hitotsu onegai shimasu",
+"zh": "好，（一個）麻煩了",
+"say": "はい、ひとつお願いします"
+},
+{
+"jp": "これをください",
+"romaji": "kore o kudasai",
+"zh": "請給我這個",
+"say": "これをください"
+},
+{
+"jp": "{現金|げんきん}で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+}
+]
+},
+{
+"clerk": {
+"jp": "お{支払|しはら}いはどうなさいますか？",
+"romaji": "oshiharai wa dō nasaimasu ka",
+"zh": "請問要怎麼付款？",
+"say": "お支払いはどうなさいますか"
+},
+"task": "你要用 Suica 付款",
+"ok": {
+"jp": "{Suica|スイカ}で",
+"romaji": "suika de",
+"zh": "用 Suica",
+"say": "スイカで"
+},
+"wrong": [
+{
+"jp": "カードでお{願|ねが}いします",
+"romaji": "kādo de onegai shimasu",
+"zh": "我刷卡",
+"say": "カードでお願いします"
+},
+{
+"jp": "{現金|げんきん}で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+},
+{
+"jp": "{以上|いじょう}で",
+"romaji": "ijō de",
+"zh": "這樣就好",
+"say": "以上で"
+}
+]
+},
+{
+"clerk": {
+"jp": "ありがとうございました。",
+"romaji": "arigatō gozaimashita",
+"zh": "謝謝光臨。",
+"say": "ありがとうございました"
+},
+"task": "跟店員道謝",
+"ok": {
+"jp": "ありがとうございます。",
+"romaji": "arigatō gozaimasu",
+"zh": "謝謝",
+"say": "ありがとうございます"
+},
+"wrong": [
+{
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "お{会計|かいけい}をお{願|ねが}いします",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+},
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+}
+]
+}
+]
+},
+{
+"id": "role-restaurant",
+"title": "餐廳點餐",
+"role": "店員",
+"turns": [
+{
+"clerk": {
+"jp": "いらっしゃいませ。{何名様|なんめいさま}ですか？",
+"romaji": "irasshaimase. nanmei-sama desu ka",
+"zh": "歡迎光臨。請問幾位？",
+"say": "いらっしゃいませ。なんめいさまですか"
+},
+"task": "你們有兩個人",
+"ok": {
+"jp": "{2人|ふたり}です。",
+"romaji": "futari desu",
+"zh": "兩個人",
+"say": "ふたりです"
+},
+"wrong": [
+{
+"jp": "{6人|ろくにん}",
+"romaji": "rokunin",
+"zh": "六個人",
+"say": "ろくにん"
+},
+{
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+},
+{
+"jp": "はい、わかりました。",
+"romaji": "hai, wakarimashita",
+"zh": "好的，我知道了",
+"say": "はい、わかりました"
+}
+]
+},
+{
+"clerk": {
+"jp": "ご{注文|ちゅうもん}はお{決|き}まりですか？",
+"romaji": "gochūmon wa okimari desu ka",
+"zh": "決定好要點什麼了嗎？",
+"say": "ご注文はお決まりですか"
+},
+"task": "指著菜單，點這個和這個",
+"ok": {
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+},
+"wrong": [
+{
+"jp": "{現金|げんきん}で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+},
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "タオル",
+"romaji": "taoru",
+"zh": "毛巾",
+"say": "タオル"
+}
+]
+},
+{
+"clerk": {
+"jp": "お{飲|の}み{物|もの}はいかがですか？",
+"romaji": "onomimono wa ikaga desu ka",
+"zh": "要喝點什麼嗎？",
+"say": "お飲み物はいかがですか"
+},
+"task": "你想要水",
+"ok": {
+"jp": "お{水|みず}ください",
+"romaji": "omizu kudasai",
+"zh": "請給我水",
+"say": "お水ください"
+},
+"wrong": [
+{
+"jp": "{禁止|きんし}です",
+"romaji": "kinshi desu",
+"zh": "禁止",
+"say": "禁止です"
+},
+{
+"jp": "{試着|しちゃく}してもいいですか",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+},
+{
+"jp": "パスポート",
+"romaji": "pasupōto",
+"zh": "護照",
+"say": "パスポート"
+}
+]
+},
+{
+"clerk": {
+"jp": "{氷|こおり}はお{入|い}れしますか？",
+"romaji": "kōri wa o-ire shimasu ka",
+"zh": "要加冰嗎？",
+"say": "氷はお入れしますか"
+},
+"task": "你不要冰",
+"ok": {
+"jp": "{氷|こおり}{無|な}しで",
+"romaji": "kōri nashi de",
+"zh": "不要冰",
+"say": "氷なしで"
+},
+"wrong": [
+{
+"jp": "はい、（{一|ひと}つ）お{願|ねが}いします。",
+"romaji": "hai, hitotsu onegai shimasu",
+"zh": "好，（一個）麻煩了",
+"say": "はい、ひとつお願いします"
+},
+{
+"jp": "{以上|いじょう}で",
+"romaji": "ijō de",
+"zh": "這樣就好",
+"say": "以上で"
+},
+{
+"jp": "お{水|みず}ください",
+"romaji": "omizu kudasai",
+"zh": "請給我水",
+"say": "お水ください"
+}
+]
+},
+{
+"clerk": {
+"jp": "{以上|いじょう}でよろしいですか？",
+"romaji": "ijō de yoroshii desu ka",
+"zh": "這樣就可以了嗎？",
+"say": "以上でよろしいですか"
+},
+"task": "你要點的就這些了",
+"ok": {
+"jp": "{以上|いじょう}で",
+"romaji": "ijō de",
+"zh": "這樣就好",
+"say": "以上で"
+},
+"wrong": [
+{
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+},
+{
+"jp": "どこにありますか",
+"romaji": "doko ni arimasu ka",
+"zh": "在哪裡？",
+"say": "どこにありますか"
+}
+]
+},
+{
+"clerk": null,
+"task": "吃完了，跟店員說要結帳",
+"ok": {
+"jp": "お{会計|かいけい}をお{願|ねが}いします",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+},
+"wrong": [
+{
+"jp": "チェックインをお{願|ねが}いします",
+"romaji": "chekkuin o onegai shimasu",
+"zh": "我要辦入住",
+"say": "チェックインをお願いします"
+},
+{
+"jp": "お{願|ねが}いします。",
+"romaji": "onegai shimasu",
+"zh": "麻煩你了",
+"say": "お願いします"
+},
+{
+"jp": "{予約|よやく}した〇〇です",
+"romaji": "yoyaku shita ○○ desu",
+"zh": "我是有預約的〇〇",
+"say": "予約した、まるまるです"
+}
+]
+}
+]
+},
+{
+"id": "role-hotel",
+"title": "飯店入住",
+"role": "櫃台人員",
+"turns": [
+{
+"clerk": {
+"jp": "こんにちは。いらっしゃいませ。",
+"romaji": "konnichiwa. irasshaimase",
+"zh": "您好，歡迎光臨。",
+"say": "こんにちは。いらっしゃいませ"
+},
+"task": "你要辦入住",
+"ok": {
+"jp": "チェックインをお{願|ねが}いします",
+"romaji": "chekkuin o onegai shimasu",
+"zh": "我要辦入住",
+"say": "チェックインをお願いします"
+},
+"wrong": [
+{
+"jp": "お{会計|かいけい}をお{願|ねが}いします",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+},
+{
+"jp": "これをください",
+"romaji": "kore o kudasai",
+"zh": "請給我這個",
+"say": "これをください"
+},
+{
+"jp": "{試着|しちゃく}してもいいですか",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+}
+]
+},
+{
+"clerk": {
+"jp": "{申|もう}し{訳|わけ}ございません。チェックインは15{時|じ}からです。",
+"romaji": "mōshiwake gozaimasen. chekkuin wa jūgo-ji kara desu",
+"zh": "很抱歉，入住要從 15 點開始。",
+"say": "申し訳ございません。チェックインは15時からです"
+},
+"task": "你想先寄放行李",
+"ok": {
+"jp": "チェックインの{時間|じかん}{前|まえ}ですが、{先|さき}に{荷物|にもつ}を{預|あず}けてもいいですか？",
+"romaji": "chekkuin no jikan mae desu ga, saki ni nimotsu o azukete mo ii desu ka",
+"zh": "還沒到入住時間，可以先寄放行李嗎？",
+"say": "チェックインの時間前ですが、さきに荷物を預けてもいいですか"
+},
+"wrong": [
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "{他|ほか}のサイズはありますか",
+"romaji": "hoka no saizu wa arimasu ka",
+"zh": "有其他尺寸嗎？",
+"say": "他のサイズはありますか"
+},
+{
+"jp": "{免税|めんぜい}できますか",
+"romaji": "menzei dekimasu ka",
+"zh": "可以免稅嗎？",
+"say": "免税できますか"
+}
+]
+},
+{
+"clerk": {
+"jp": "かしこまりました。お{名前|なまえ}をお{願|ねが}いします。",
+"romaji": "kashikomarimashita. onamae o onegai shimasu",
+"zh": "好的，請告訴我您的名字。",
+"say": "かしこまりました。お名前をお願いします"
+},
+"task": "告訴對方你有預約",
+"ok": {
+"jp": "{予約|よやく}した〇〇です",
+"romaji": "yoyaku shita ○○ desu",
+"zh": "我是有預約的〇〇",
+"say": "予約した、まるまるです"
+},
+"wrong": [
+{
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+},
+{
+"jp": "{現金|げんきん}で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+},
+{
+"jp": "〇〇{駅|えき}まで",
+"romaji": "○○ eki made",
+"zh": "到〇〇站",
+"say": "まるまる駅まで"
+}
+]
+},
+{
+"clerk": {
+"jp": "パスポートをお{願|ねが}いします。",
+"romaji": "pasupōto o onegai shimasu",
+"zh": "麻煩給我護照。",
+"say": "パスポートをお願いします"
+},
+"task": "你聽懂了，表示知道了",
+"ok": {
+"jp": "はい、わかりました。",
+"romaji": "hai, wakarimashita",
+"zh": "好的，我知道了",
+"say": "はい、わかりました"
+},
+"wrong": [
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+},
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "{以上|いじょう}で",
+"romaji": "ijō de",
+"zh": "這樣就好",
+"say": "以上で"
+}
+]
+}
+]
+},
+{
+"id": "role-shopping",
+"title": "買衣服",
+"role": "店員",
+"turns": [
+{
+"clerk": {
+"jp": "いらっしゃいませ。",
+"romaji": "irasshaimase",
+"zh": "歡迎光臨。",
+"say": "いらっしゃいませ"
+},
+"task": "你想找手機照片裡的這個商品",
+"ok": {
+"jp": "この{商品|しょうひん}を{探|さが}したいんですけど…",
+"romaji": "kono shōhin o sagashitai n desu kedo",
+"zh": "我想找這個商品…",
+"say": "この商品を探したいんですけど"
+},
+"wrong": [
+{
+"jp": "チェックインをお{願|ねが}いします",
+"romaji": "chekkuin o onegai shimasu",
+"zh": "我要辦入住",
+"say": "チェックインをお願いします"
+},
+{
+"jp": "お{会計|かいけい}をお{願|ねが}いします",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+},
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+}
+]
+},
+{
+"clerk": {
+"jp": "こちらです。",
+"romaji": "kochira desu",
+"zh": "在這邊。",
+"say": "こちらです"
+},
+"task": "你想試穿",
+"ok": {
+"jp": "{試着|しちゃく}してもいいですか",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+},
+"wrong": [
+{
+"jp": "{免税|めんぜい}できますか",
+"romaji": "menzei dekimasu ka",
+"zh": "可以免稅嗎？",
+"say": "免税できますか"
+},
+{
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+}
+]
+},
+{
+"clerk": {
+"jp": "サイズはいかがですか？",
+"romaji": "saizu wa ikaga desu ka",
+"zh": "尺寸還可以嗎？",
+"say": "サイズはいかがですか"
+},
+"task": "太小了，想問有沒有其他尺寸",
+"ok": {
+"jp": "{他|ほか}のサイズはありますか",
+"romaji": "hoka no saizu wa arimasu ka",
+"zh": "有其他尺寸嗎？",
+"say": "他のサイズはありますか"
+},
+"wrong": [
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "これをください",
+"romaji": "kore o kudasai",
+"zh": "請給我這個",
+"say": "これをください"
+},
+{
+"jp": "{現金|げんきん}で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+}
+]
+},
+{
+"clerk": {
+"jp": "こちらがLサイズです。",
+"romaji": "kochira ga eru saizu desu",
+"zh": "這是 L 號。",
+"say": "こちらがエルサイズです"
+},
+"task": "你決定買了",
+"ok": {
+"jp": "これをください",
+"romaji": "kore o kudasai",
+"zh": "請給我這個",
+"say": "これをください"
+},
+"wrong": [
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "どこにありますか",
+"romaji": "doko ni arimasu ka",
+"zh": "在哪裡？",
+"say": "どこにありますか"
+}
+]
+},
+{
+"clerk": {
+"jp": "ありがとうございます。",
+"romaji": "arigatō gozaimasu",
+"zh": "謝謝您。",
+"say": "ありがとうございます"
+},
+"task": "你想問能不能免稅",
+"ok": {
+"jp": "{免税|めんぜい}できますか",
+"romaji": "menzei dekimasu ka",
+"zh": "可以免稅嗎？",
+"say": "免税できますか"
+},
+"wrong": [
+{
+"jp": "{在庫|ざいこ}はありますか",
+"romaji": "zaiko wa arimasu ka",
+"zh": "有庫存嗎？",
+"say": "在庫はありますか"
+},
+{
+"jp": "{試着|しちゃく}してもいいですか",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+},
+{
+"jp": "{以上|いじょう}で",
+"romaji": "ijō de",
+"zh": "這樣就好",
+"say": "以上で"
+}
+]
+},
+{
+"clerk": {
+"jp": "パスポートをお{願|ねが}いします。",
+"romaji": "pasupōto o onegai shimasu",
+"zh": "麻煩給我護照。",
+"say": "パスポートをお願いします"
+},
+"task": "你聽懂了，表示知道了",
+"ok": {
+"jp": "はい、わかりました。",
+"romaji": "hai, wakarimashita",
+"zh": "好的，我知道了",
+"say": "はい、わかりました"
+},
+"wrong": [
+{
+"jp": "{大丈夫|だいじょうぶ}です。",
+"romaji": "daijōbu desu",
+"zh": "沒關係／不用了",
+"say": "大丈夫です"
+},
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+}
+]
+}
+]
+},
+{
+"id": "role-station",
+"title": "車站問路",
+"role": "站務員",
+"turns": [
+{
+"clerk": {
+"jp": "どちらまでですか？",
+"romaji": "dochira made desu ka",
+"zh": "請問要到哪裡？",
+"say": "どちらまでですか"
+},
+"task": "你要到〇〇站",
+"ok": {
+"jp": "〇〇{駅|えき}まで",
+"romaji": "○○ eki made",
+"zh": "到〇〇站",
+"say": "まるまる駅まで"
+},
+"wrong": [
+{
+"jp": "{予約|よやく}した〇〇です",
+"romaji": "yoyaku shita ○○ desu",
+"zh": "我是有預約的〇〇",
+"say": "予約した、まるまるです"
+},
+{
+"jp": "〇〇{抜|ぬ}きで",
+"romaji": "○○ nuki de",
+"zh": "不要加〇〇",
+"say": "まるまる、抜きで"
+},
+{
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+}
+]
+},
+{
+"clerk": {
+"jp": "3{番線|ばんせん}の{各駅停車|かくえきていしゃ}です。",
+"romaji": "sanbansen no kakueki teisha desu",
+"zh": "在 3 號月台，搭每站都停的車。",
+"say": "三番線の各駅停車です"
+},
+"task": "你沒聽清楚，請對方再說一次",
+"ok": {
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+"wrong": [
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+},
+{
+"jp": "お{願|ねが}いします。",
+"romaji": "onegai shimasu",
+"zh": "麻煩你了",
+"say": "お願いします"
+},
+{
+"jp": "これをください",
+"romaji": "kore o kudasai",
+"zh": "請給我這個",
+"say": "これをください"
+}
+]
+},
+{
+"clerk": {
+"jp": "3{番線|ばんせん}です。",
+"romaji": "sanbansen desu",
+"zh": "在 3 號月台。",
+"say": "三番線です"
+},
+"task": "這次聽懂了",
+"ok": {
+"jp": "はい、わかりました。",
+"romaji": "hai, wakarimashita",
+"zh": "好的，我知道了",
+"say": "はい、わかりました"
+},
+"wrong": [
+{
+"jp": "ちょっと{考|かんが}えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "{大丈夫|だいじょうぶ}です。",
+"romaji": "daijōbu desu",
+"zh": "沒關係／不用了",
+"say": "大丈夫です"
+},
+{
+"jp": "{現金|げんきん}で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+}
+]
+},
+{
+"clerk": null,
+"task": "再問一句：要轉乘嗎？",
+"ok": {
+"jp": "{乗|の}り{換|か}えはありますか？",
+"romaji": "norikae wa arimasu ka",
+"zh": "要轉乘嗎？",
+"say": "乗り換えはありますか"
+},
+"wrong": [
+{
+"jp": "どこにありますか",
+"romaji": "doko ni arimasu ka",
+"zh": "在哪裡？",
+"say": "どこにありますか"
+},
+{
+"jp": "{他|ほか}のサイズはありますか",
+"romaji": "hoka no saizu wa arimasu ka",
+"zh": "有其他尺寸嗎？",
+"say": "他のサイズはありますか"
+},
+{
+"jp": "{在庫|ざいこ}はありますか",
+"romaji": "zaiko wa arimasu ka",
+"zh": "有庫存嗎？",
+"say": "在庫はありますか"
+}
+]
+},
+{
+"clerk": {
+"jp": "いいえ、ありません。",
+"romaji": "iie, arimasen",
+"zh": "不用，沒有轉乘。",
+"say": "いいえ、ありません"
+},
+"task": "跟站務員道謝",
+"ok": {
+"jp": "ありがとうございます。",
+"romaji": "arigatō gozaimasu",
+"zh": "謝謝",
+"say": "ありがとうございます"
+},
+"wrong": [
+{
+"jp": "お{会計|かいけい}をお{願|ねが}いします",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+},
+{
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+}
+]
+}
+]
+}
+];
+function classRoleStart(sc){
+  const v = {name:'role', sc, idx:0, picked:null, showText:false, correct:0, wrong:[], saved:false};
+  v.options = classRoleOptions(sc, 0);
+  classGo(v);
+  classRoleSpeak();
+}
+function classRoleOptions(sc, i){
+  const t = sc.turns[i];
+  return shuffle([t.ok, ...t.wrong]);
+}
+function classRoleSpeak(slow){
+  const v = classView, c = v.sc.turns[v.idx]?.clerk;
+  if(c) speak(c.say, !!slow);
+}
+function classRoleHTML(v){
+  const n = v.sc.turns.length;
+  if(v.idx >= n) return classRoleResultHTML(v);
+  const t = v.sc.turns[v.idx], c = t.clerk, done = v.picked !== null;
+  const showClerk = c && (done || v.showText);
+  return `<button class="class-back" data-back="1">← 離開對話</button>
+    <div class="card class-recite">
+      <div class="class-zh">${esc(v.sc.title)}・第 ${v.idx + 1} / ${n} 回合</div>
+      ${c ? `
+        <div class="class-role-speaker">${esc(v.sc.role)}對你說</div>
+        ${showClerk ? `<div class="class-jp class-exam-stem" lang="ja">${classRuby(c.jp)}</div><div class="class-romaji">${esc(c.romaji)}</div>${done ? `<div class="class-zh">${esc(c.zh)}</div>` : ''}` : ''}
+        <div class="class-recite-btns" style="margin:10px 0 6px;">
+          <button class="action btn-ghost" data-role-say="1">🔊 再聽一次</button>
+          <button class="action btn-ghost" data-role-say="slow">🐢 慢速</button>
+          ${done || v.showText ? '' : '<button class="action btn-ghost" data-role-text="1">看字幕</button>'}
+        </div>` : ''}
+      <div class="class-role-task"><b>你的任務</b><br>${esc(t.task)}</div>
+      ${done ? '' : '<div class="class-zh" style="margin:10px 0 2px;">先開口用日文說一次，再選你說的那句</div>'}
+      <div class="class-exam-options">
+        ${v.options.map((o, i) => {
+          const cls = done ? (o === t.ok ? ' right' : (i === v.picked ? ' wrong' : '')) : '';
+          return `<button class="class-exam-option${cls}" data-role-pick="${i}"${done ? ' disabled' : ''}><span class="class-jp" lang="ja">${classRuby(o.jp)}</span></button>`;
+        }).join('')}
+      </div>
+      ${done ? `
+        <div class="class-exam-answer">
+          <div><b>${v.options[v.picked] === t.ok ? '答對了' : '這句不適合這個情況'}</b></div>
+          ${v.options[v.picked] === t.ok ? '' : `<div class="class-zh">你選的意思是「${esc(v.options[v.picked].zh || v.options[v.picked].romaji)}」</div>`}
+          <div class="class-jp" lang="ja">${classRuby(t.ok.jp)}</div>
+          <div class="class-romaji">${esc(t.ok.romaji)}</div>
+          <div class="class-zh">${esc(t.ok.zh)}</div>
+        </div>
+        <div class="class-recite-btns">
+          <button class="action btn-ghost" data-role-ok-say="1">🔊 聽這句</button>
+          <button class="action btn-primary" data-role-next="1">${v.idx + 1 < n ? '下一回合' : '看成績'}</button>
+        </div>` : ''}
+    </div>`;
+}
+function classRoleResultHTML(v){
+  const total = v.sc.turns.length, score = Math.round(v.correct / total * 100);
+  if(!v.saved){
+    const hist = loadClassExams();
+    hist.unshift({id:v.sc.id, title:`情境對話・${v.sc.title}`, date:todayStr(), score, correct:v.correct, total});
+    saveClassExams(hist.slice(0, 50));
+    v.saved = true;
+  }
+  const msg = score === 100 ? '全對！這段可以直接上場了' : score >= 80 ? '通過了，繼續保持' : '再演一次，你可以的';
+  return `<button class="class-back" data-back="1">← 回去</button>
+    <div class="card class-recite">
+      <div class="class-zh">情境對話・${esc(v.sc.title)}</div>
+      <div class="class-exam-score">${score}<span> 分</span></div>
+      <div class="class-zh">答對 ${v.correct} / ${total} 回合・${msg}</div>
+      <div class="class-recite-btns">
+        <button class="action btn-primary" data-role-retry="1">再演一次</button>
+        <button class="action btn-ghost" data-back="1">完成</button>
+      </div>
+    </div>
+    ${v.wrong.length ? `<div class="card class-section"><b>要再練的句子</b>
+      ${v.wrong.map((t, i) => `
+        <div class="class-row">
+          <div class="class-text">
+            <div class="class-zh">${esc(t.task)}</div>
+            <div class="class-jp" lang="ja">${classRuby(t.ok.jp)}</div>
+            <div class="class-romaji">${esc(t.ok.romaji)}</div>
+          </div>
+          <div class="class-btns"><button class="icon-btn" data-role-wrong-say="${i}" aria-label="播放發音" title="播放發音">🔊</button></div>
+        </div>`).join('')}
+    </div>` : ''}`;
+}
+function onClassRoleClick(t, v){
+  const turn = v.sc.turns[v.idx];
+  if(t.dataset.rolePick !== undefined){
+    if(v.picked !== null) return true;
+    v.picked = Number(t.dataset.rolePick);
+    if(v.options[v.picked] === turn.ok){
+      v.correct++;
+    } else {
+      v.wrong.push(turn);
+      // 這句如果在課程裡，排進隔天複習
+      const x = CLASS_LESSONS.flatMap(classItems).find(y => y.it.say === turn.ok.say);
+      if(x){
+        const p = loadClassProgress();
+        p[classKey(x.l, x.it)] = {box:1, next:addDays(todayStr(), 1)};
+        saveClassProgress(p);
+      }
+    }
+    markStudied();
+    incrementDailyCount();
+    renderClass();
+    speak(turn.ok.say);
+    return true;
+  }
+  if(t.dataset.roleSay){ classRoleSpeak(t.dataset.roleSay === 'slow'); return true; }
+  if(t.dataset.roleText){ v.showText = true; renderClass(); return true; }
+  if(t.dataset.roleOkSay){ speak(turn.ok.say); return true; }
+  if(t.dataset.roleWrongSay !== undefined){ speak(v.wrong[t.dataset.roleWrongSay].ok.say); return true; }
+  if(t.dataset.roleNext){
+    v.idx++;
+    v.picked = null;
+    v.showText = false;
+    stopClassPlay();
+    if(v.idx < v.sc.turns.length) v.options = classRoleOptions(v.sc, v.idx);
+    renderClass();
+    window.scrollTo(0, 0);
+    classRoleSpeak();
+    return true;
+  }
+  if(t.dataset.roleRetry){ classRoleStart(v.sc); return true; }
+  return false;
+}
+
 function renderClass(){
   const area = document.getElementById('class-area');
   const v = classView;
   if(v.name === 'lesson') area.innerHTML = classLessonHTML(CLASS_LESSONS.find(l => l.id === v.id));
   else if(v.name === 'recite') area.innerHTML = classReciteHTML(v);
   else if(v.name === 'exam') area.innerHTML = classExamHTML(v);
+  else if(v.name === 'role') area.innerHTML = classRoleHTML(v);
   else area.innerHTML = classHomeHTML();
   if(area.dataset.ready) return;
   area.dataset.ready = '1';
@@ -2714,6 +3757,8 @@ function onClassClick(e){
   if(t.dataset.open){ classGo({name:'lesson', id:t.dataset.open}); return; }
   if(t.dataset.back){ classGo((v.name === 'recite' || v.name === 'exam') && v.from ? {name:'lesson', id:v.from} : {name:'home'}); return; }
   if(v.name === 'exam' && onClassExamClick(t, v)) return;
+  if(v.name === 'role' && onClassRoleClick(t, v)) return;
+  if(t.dataset.role){ classRoleStart(CLASS_ROLEPLAYS.find(s => s.id === t.dataset.role)); return; }
   if(t.dataset.examAll){ classExamStart(classExamLessons(), '綜合考試', null); return; }
   if(t.dataset.exam){
     const l = CLASS_LESSONS.find(x => x.id === t.dataset.exam);
