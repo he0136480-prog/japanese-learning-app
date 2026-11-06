@@ -756,6 +756,14 @@
     .celebration-toast{ transition:opacity .2s ease; }
     .celebration-toast.show{ animation:none; transform:translateX(-50%) translateY(0); }
   }
+  .class-title{ font-family:var(--serif); margin:0 0 6px; }
+  .class-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .class-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+  .class-text{ min-width:0; }
+  .class-jp{ font-family:var(--serif); font-size:1.08rem; line-height:1.5; }
+  .class-romaji{ color:var(--accent); font-size:.88rem; font-weight:400; }
+  .class-zh{ color:var(--ink-soft); font-size:.88rem; margin-top:2px; }
+  .class-btns{ display:flex; gap:6px; flex:none; }
 </style>
 </head>
 <body>
@@ -788,6 +796,7 @@
 
 <nav role="tablist" aria-label="主要功能分頁">
   <button class="tab-btn active" data-tab="kana" role="tab" aria-selected="true">50音・基礎訓練</button>
+  <button class="tab-btn" data-tab="class" role="tab" aria-selected="false">日文課</button>
   <button class="tab-btn" data-tab="grammar" role="tab" aria-selected="false">文法邏輯</button>
   <button class="tab-btn" data-tab="flash" role="tab" aria-selected="false">單字卡</button>
   <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">小測驗</button>
@@ -812,6 +821,11 @@
     <div class="card" id="kana-quiz-area" style="display:none;"></div>
     <div id="basics-flash-area" style="display:none;"></div>
     <div class="card" id="basics-quiz-area" style="display:none;"></div>
+  </section>
+
+  <!-- 日文課：每堂上課內容 -->
+  <section class="panel" id="panel-class" role="tabpanel" aria-label="日文課">
+    <div id="class-area"></div>
   </section>
 
   <!-- GRAMMAR LOGIC (書本式) -->
@@ -1633,10 +1647,12 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    if(btn.dataset.tab!=='class') stopClassPlay();
     btn.classList.add('active');
     btn.setAttribute('aria-selected','true');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
     if(btn.dataset.tab==='kana') renderKana();
+    if(btn.dataset.tab==='class') renderClass();
     if(btn.dataset.tab==='grammar') renderGrammar();
     if(btn.dataset.tab==='flash') renderFlash();
     if(btn.dataset.tab==='quiz') renderQuiz();
@@ -1715,7 +1731,7 @@ function updateSlowBtn(){
   btn.title = slowSpeak ? '慢速發音已開啟（點擊切回正常速度）' : '切換慢速發音';
 }
 
-function speak(text){
+function speak(text, forceSlow){
   if(!('speechSynthesis' in window)){
     alert('你的瀏覽器不支援語音播放功能，建議改用 Chrome 或 Safari 最新版。');
     return;
@@ -1724,7 +1740,7 @@ function speak(text){
   const doSpeak = ()=>{
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ja-JP';
-    u.rate = slowSpeak ? 0.55 : 0.85;
+    u.rate = (forceSlow || slowSpeak) ? 0.55 : 0.85;
     const voice = pickJapaneseVoice();
     if(voice) u.voice = voice;
     synth.speak(u);
@@ -1738,6 +1754,457 @@ function speak(text){
   } else {
     doSpeak();
   }
+}
+
+/* ---------- 日文課：每堂上課內容（新增一堂就往 CLASS_LESSONS 最前面加一筆，內容不存 localStorage） ---------- */
+const CLASS_LESSONS = [
+{
+"id": "2026-11-03",
+"title": "11/3 旅遊會話",
+"date": "2026/11/3（二）",
+"sections": [
+{
+"title": "基本用語",
+"romaji": "kihon yōgo",
+"items": [
+{
+"jp": "ありがとうございます。",
+"romaji": "arigatō gozaimasu",
+"zh": "謝謝",
+"say": "ありがとうございます"
+},
+{
+"jp": "大丈夫（だいじょうぶ）です。",
+"romaji": "daijōbu desu",
+"zh": "沒關係／不用了",
+"say": "大丈夫です"
+},
+{
+"jp": "いらないです。",
+"romaji": "iranai desu",
+"zh": "不需要",
+"say": "いらないです"
+},
+{
+"jp": "お願（ねが）いします。",
+"romaji": "onegai shimasu",
+"zh": "麻煩你了",
+"say": "お願いします"
+},
+{
+"jp": "もう一度（いちど）お願いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "麻煩再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "はい、わかりました。",
+"romaji": "hai, wakarimashita",
+"zh": "好的，我知道了",
+"say": "はい、わかりました"
+},
+{
+"jp": "パスポート",
+"romaji": "pasupōto",
+"zh": "護照",
+"say": "パスポート"
+}
+]
+},
+{
+"title": "お会計（おかいけい）結帳",
+"romaji": "okaikei",
+"items": [
+{
+"jp": "お袋（おふくろ）はご利用（ごりよう）ですか？",
+"romaji": "ofukuro wa goriyō desu ka",
+"zh": "需要袋子嗎？",
+"say": "おふくろはご利用ですか"
+},
+{
+"jp": "レジ袋（レジぶくろ）",
+"romaji": "reji-bukuro",
+"zh": "購物袋",
+"say": "レジ袋"
+},
+{
+"jp": "はい、（一つ）お願いします。",
+"romaji": "hai, hitotsu onegai shimasu",
+"zh": "好，（一個）麻煩了",
+"say": "はい、ひとつお願いします"
+},
+{
+"jp": "大丈夫です。",
+"romaji": "daijōbu desu",
+"zh": "不用了",
+"say": "大丈夫です"
+},
+{
+"jp": "支払い方法（しはらいほうほう）",
+"romaji": "shiharai hōhō",
+"zh": "付款方式",
+"say": "支払い方法"
+},
+{
+"jp": "カードでお願いします",
+"romaji": "kādo de onegai shimasu",
+"zh": "我刷卡",
+"say": "カードでお願いします"
+},
+{
+"jp": "Suicaで",
+"romaji": "suika de",
+"zh": "用 Suica",
+"say": "スイカで"
+},
+{
+"jp": "現金（げんきん）で",
+"romaji": "genkin de",
+"zh": "付現金",
+"say": "現金で"
+}
+]
+},
+{
+"title": "食事（しょくじ）用餐",
+"romaji": "shokuji",
+"items": [
+{
+"jp": "何名様（なんめいさま）ですか？",
+"romaji": "nanmei-sama desu ka",
+"zh": "請問幾位？",
+"say": "なんめいさまですか"
+},
+{
+"jp": "二名（にめい）です。",
+"romaji": "nimei desu",
+"zh": "兩位",
+"say": "二名です"
+},
+{
+"jp": "2人（ふたり）です。",
+"romaji": "futari desu",
+"zh": "兩個人",
+"say": "二人です"
+},
+{
+"jp": "6人（ろくにん）",
+"romaji": "rokunin",
+"zh": "六個人",
+"say": "六人"
+},
+{
+"jp": "店内（てんない）で",
+"romaji": "tennai de",
+"zh": "內用",
+"say": "店内で"
+},
+{
+"jp": "持ち帰り（もちかえり）で",
+"romaji": "mochikaeri de",
+"zh": "外帶",
+"say": "持ち帰りで"
+},
+{
+"jp": "予約（よやく）した〇〇です",
+"romaji": "yoyaku shita ○○ desu",
+"zh": "我是有預約的〇〇",
+"say": "予約した、まるまるです"
+},
+{
+"jp": "注文（ちゅうもん）",
+"romaji": "chūmon",
+"zh": "點餐",
+"say": "注文"
+},
+{
+"jp": "これとこれ",
+"romaji": "kore to kore",
+"zh": "這個和這個",
+"say": "これとこれ"
+},
+{
+"jp": "以上（いじょう）で",
+"romaji": "ijō de",
+"zh": "這樣就好",
+"say": "以上で"
+},
+{
+"jp": "飲み物（のみもの）はありますか",
+"romaji": "nomimono wa arimasu ka",
+"zh": "有飲料嗎？",
+"say": "飲み物はありますか"
+},
+{
+"jp": "お水（みず）ください",
+"romaji": "omizu kudasai",
+"zh": "請給我水",
+"say": "お水ください"
+},
+{
+"jp": "氷無し（こおりなし）で",
+"romaji": "kōri nashi de",
+"zh": "不要冰",
+"say": "氷なしで"
+},
+{
+"jp": "〇〇抜き（ぬき）で",
+"romaji": "○○ nuki de",
+"zh": "不要加〇〇",
+"say": "まるまる、抜きで"
+},
+{
+"jp": "卵の黄身（たまごのきみ）",
+"romaji": "tamago no kimi",
+"zh": "蛋黃",
+"say": "卵の黄身"
+},
+{
+"jp": "お会計（おかいけい）をお願いします",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+}
+]
+},
+{
+"title": "ホテル 飯店",
+"romaji": "hoteru",
+"items": [
+{
+"jp": "チェックインをお願いします",
+"romaji": "chekkuin o onegai shimasu",
+"zh": "我要辦入住",
+"say": "チェックインをお願いします"
+},
+{
+"jp": "チェックインの時間（じかん）前（まえ）ですが、先（さき）に荷物（にもつ）を預（あず）けてもいいですか？",
+"romaji": "chekkuin no jikan mae desu ga, saki ni nimotsu o azukete mo ii desu ka",
+"zh": "還沒到入住時間，可以先寄放行李嗎？",
+"say": "チェックインの時間前ですが、さきに荷物を預けてもいいですか"
+},
+{
+"jp": "喫煙（きつえん）はいけません",
+"romaji": "kitsuen wa ikemasen",
+"zh": "不可以吸菸",
+"say": "喫煙はいけません"
+},
+{
+"jp": "禁止（きんし）です",
+"romaji": "kinshi desu",
+"zh": "禁止",
+"say": "禁止です"
+},
+{
+"jp": "タオル",
+"romaji": "taoru",
+"zh": "毛巾",
+"say": "タオル"
+},
+{
+"jp": "歯磨き（はみがき）",
+"romaji": "hamigaki",
+"zh": "刷牙／牙膏",
+"say": "歯磨き"
+}
+]
+},
+{
+"title": "お買い物（おかいもの）購物",
+"romaji": "okaimono",
+"items": [
+{
+"jp": "試着（しちゃく）してもいいですか",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+},
+{
+"jp": "この商品（しょうひん）を探（さが）したいんですけど…",
+"romaji": "kono shōhin o sagashitai n desu kedo",
+"zh": "我想找這個商品…",
+"say": "この商品を探したいんですけど"
+},
+{
+"jp": "どこにありますか",
+"romaji": "doko ni arimasu ka",
+"zh": "在哪裡？",
+"say": "どこにありますか"
+},
+{
+"jp": "他（ほか）のサイズはありますか",
+"romaji": "hoka no saizu wa arimasu ka",
+"zh": "有其他尺寸嗎？",
+"say": "他のサイズはありますか"
+},
+{
+"jp": "色（いろ）",
+"romaji": "iro",
+"zh": "顏色",
+"say": "いろ"
+},
+{
+"jp": "白（しろ）",
+"romaji": "shiro",
+"zh": "白色",
+"say": "しろ"
+},
+{
+"jp": "黒（くろ）",
+"romaji": "kuro",
+"zh": "黑色",
+"say": "くろ"
+},
+{
+"jp": "灰色（はいいろ）",
+"romaji": "haiiro",
+"zh": "灰色",
+"say": "はいいろ"
+},
+{
+"jp": "S（エス）、M（エム）、L（エル）",
+"romaji": "esu, emu, eru",
+"zh": "",
+"say": "エス、エム、エル"
+},
+{
+"jp": "在庫（ざいこ）はありますか",
+"romaji": "zaiko wa arimasu ka",
+"zh": "有庫存嗎？",
+"say": "在庫はありますか"
+},
+{
+"jp": "ちょっと考（かんが）えます",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "これをください",
+"romaji": "kore o kudasai",
+"zh": "請給我這個",
+"say": "これをください"
+},
+{
+"jp": "免税（めんぜい）できますか",
+"romaji": "menzei dekimasu ka",
+"zh": "可以免稅嗎？",
+"say": "免税できますか"
+}
+]
+},
+{
+"title": "駅（えき）車站",
+"romaji": "eki",
+"items": [
+{
+"jp": "〇〇駅まで",
+"romaji": "○○ eki made",
+"zh": "到〇〇站",
+"say": "まるまる駅まで"
+},
+{
+"jp": "番線（ばんせん）",
+"romaji": "bansen",
+"zh": "第幾月台",
+"say": "番線"
+},
+{
+"jp": "乗り換え（のりかえ）",
+"romaji": "norikae",
+"zh": "轉乘",
+"say": "乗り換え"
+},
+{
+"jp": "各駅停車（かくえきていしゃ）",
+"romaji": "kakueki teisha",
+"zh": "每站都停的列車",
+"say": "各駅停車"
+}
+]
+}
+],
+"ask": [
+"「じょうず」（jōzu）寫在內用／外帶底下，是什麼情境？",
+"「ワン」（wan）寫在預約底下，是什麼意思？"
+]
+}
+];
+let classPlayToken = 0;
+function stopClassPlay(){
+  classPlayToken++;
+  // 沒有東西在播放時不呼叫 cancel，避免 iOS 吃掉緊接著的語音（同 speak() 的註解）
+  if('speechSynthesis' in window && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) window.speechSynthesis.cancel();
+  document.querySelectorAll('.class-playall').forEach(b=>{ b.textContent='▶ 整段跟讀'; });
+}
+function playClassSection(btn, items){
+  const wasPlaying = window.speechSynthesis.speaking || window.speechSynthesis.pending;
+  stopClassPlay();
+  const token = classPlayToken;
+  btn.textContent = '■ 停止';
+  let i = 0;
+  const next = ()=>{
+    if(token !== classPlayToken) return;
+    if(i >= items.length){ btn.textContent = '▶ 整段跟讀'; return; }
+    const it = items[i++];
+    const u = new SpeechSynthesisUtterance(it.say);
+    u.lang = 'ja-JP';
+    u.rate = 0.75;
+    const voice = pickJapaneseVoice();
+    if(voice) u.voice = voice;
+    // 每句唸完留「該句長度 + 1.2 秒」的空檔給使用者跟讀
+    const started = Date.now();
+    const done = ()=> setTimeout(next, Date.now()-started+1200);
+    u.onend = done;
+    u.onerror = done;
+    window.speechSynthesis.speak(u);
+  };
+  if(wasPlaying) setTimeout(next, 60); else next();
+}
+function renderClass(){
+  const area = document.getElementById('class-area');
+  if(area.dataset.ready) return;
+  area.dataset.ready = '1';
+  area.innerHTML = CLASS_LESSONS.map((l,li)=>`
+    <h2 class="class-title">${esc(l.title)}</h2>
+    <div class="sub" style="margin-bottom:14px;">上課日期 ${esc(l.date)}。長音寫成 ō、ū，要拉長一拍；〇〇 唸 marumaru，實際使用時換成名字或站名。</div>
+    ${l.sections.map((s,si)=>`
+      <div class="card class-section">
+        <div class="class-head">
+          <div><b>${esc(s.title)}</b> <span class="class-romaji">${esc(s.romaji)}</span></div>
+          <button class="action btn-ghost class-playall" data-l="${li}" data-s="${si}">▶ 整段跟讀</button>
+        </div>
+        ${s.items.map((it,ii)=>`
+          <div class="class-row">
+            <div class="class-text">
+              <div class="class-jp" lang="ja">${esc(it.jp)}</div>
+              <div class="class-romaji">${esc(it.romaji)}</div>
+              ${it.zh?`<div class="class-zh">${esc(it.zh)}</div>`:''}
+            </div>
+            <div class="class-btns">
+              <button class="icon-btn class-say" data-l="${li}" data-s="${si}" data-i="${ii}" aria-label="播放發音" title="播放發音">🔊</button>
+              <button class="icon-btn class-say" data-slow="1" data-l="${li}" data-s="${si}" data-i="${ii}" aria-label="慢速播放" title="慢速播放">🐢</button>
+            </div>
+          </div>`).join('')}
+      </div>`).join('')}
+    <div class="card class-section"><b>下次問老師</b>
+      ${l.ask.map(a=>`<div class="class-zh" style="margin-top:8px;">${esc(a)}</div>`).join('')}
+    </div>`).join('');
+  area.addEventListener('click', e=>{
+    const say = e.target.closest('.class-say');
+    if(say){
+      stopClassPlay();
+      const it = CLASS_LESSONS[say.dataset.l].sections[say.dataset.s].items[say.dataset.i];
+      speak(it.say, say.dataset.slow === '1');
+      return;
+    }
+    const all = e.target.closest('.class-playall');
+    if(all){
+      if(!('speechSynthesis' in window)){ speak(''); return; }
+      if(all.textContent.includes('停止')){ stopClassPlay(); return; }
+      playClassSection(all, CLASS_LESSONS[all.dataset.l].sections[all.dataset.s].items);
+    }
+  });
 }
 
 /* ---------- SPEECH: pronunciation check ---------- */
