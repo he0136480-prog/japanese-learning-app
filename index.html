@@ -1808,6 +1808,662 @@ function speak(text, forceSlow){
 /* ---------- 日文課：每堂上課內容（新增一堂就往 CLASS_LESSONS 最前面加一筆，內容不存 localStorage） ---------- */
 const CLASS_LESSONS = [
 {
+"id": "class-2026-11-11",
+"date": "2026-11-11",
+"title": "旅遊會話（二）",
+"tag": "老師上課",
+"note": "有幾句和筆記寫法不同，是我照常見說法改的，已列在「下次問老師」，請老師確認。",
+"ask": [
+"筆記寫「お袋はご利用ですか？」，「お袋（おふくろ）」通常是「媽媽」的意思，我先寫成「レジ袋はご利用ですか？」，店員是這樣說嗎？",
+"筆記寫「お飲み物は先に伺いしても」，我照常見說法補成「お伺いしても」，對嗎？",
+"筆記寫「これを一つをお願いします」，句子裡有兩個「を」，我改成「これを一つお願いします」，對嗎？",
+"筆記寫「別々にお支払いますか」，我改成「別々にお支払いしますか」，對嗎？",
+"取り皿筆記注音是「とりさら」，字典讀音是「とりざら」，我先用「とりざら」，對嗎？"
+],
+"sections": [
+{
+"title": "{基本|きほん}{用語|ようご}",
+"romaji": "kihon yōgo",
+"items": [
+{
+"jp": "すみません。",
+"romaji": "sumimasen",
+"zh": "不好意思／請問（叫人、道歉都能用）",
+"say": "すみません"
+},
+{
+"jp": "あの…",
+"romaji": "ano…",
+"zh": "那個…（開口前的停頓）",
+"say": "あの"
+},
+{
+"jp": "ありがとうございます。",
+"romaji": "arigatō gozaimasu",
+"zh": "謝謝",
+"say": "ありがとうございます"
+},
+{
+"jp": "{大丈夫|だいじょうぶ}です。",
+"romaji": "daijōbu desu",
+"zh": "沒關係／不用了",
+"say": "大丈夫です"
+},
+{
+"jp": "お{願|ねが}いします。",
+"romaji": "onegai shimasu",
+"zh": "麻煩你了／拜託",
+"say": "お願いします"
+},
+{
+"jp": "もう{一度|いちど}お{願|ねが}いします。",
+"romaji": "mō ichido onegai shimasu",
+"zh": "請再說一次",
+"say": "もう一度お願いします"
+},
+{
+"jp": "はい、わかりました。",
+"romaji": "hai, wakarimashita",
+"zh": "好，我知道了",
+"say": "はい、わかりました"
+}
+]
+},
+{
+"title": "お{会計|かいけい} 結帳",
+"romaji": "okaikei",
+"tip": "中文前面標「店員」的，是對方會對你說的話；沒標的是你要說的。",
+"items": [
+{
+"jp": "レジ{袋|ぶくろ}はご{利用|りよう}ですか？",
+"romaji": "rejibukuro wa goriyō desu ka",
+"zh": "店員：要塑膠袋嗎？（也會說「袋はご利用ですか」）",
+"say": "レジ袋はご利用ですか"
+},
+{
+"jp": "お{箸|はし}はお{付|つ}けしますか？",
+"romaji": "ohashi wa otsuke shimasu ka",
+"zh": "店員：需要附筷子嗎？",
+"say": "お箸はお付けしますか"
+},
+{
+"jp": "{温|あたた}めますか？",
+"romaji": "atatamemasu ka",
+"zh": "店員：要加熱嗎？",
+"say": "温めますか"
+},
+{
+"jp": "はい、お{願|ねが}いします。",
+"romaji": "hai, onegai shimasu",
+"zh": "好，麻煩你（要）",
+"say": "はい、お願いします"
+},
+{
+"jp": "{大丈夫|だいじょうぶ}です。",
+"romaji": "daijōbu desu",
+"zh": "不用了（拒絕）",
+"say": "大丈夫です"
+},
+{
+"jp": "お{支払|しはら}いはどうされますか？",
+"romaji": "oshiharai wa dō saremasu ka",
+"zh": "店員：請問要怎麼付款？",
+"say": "お支払いはどうされますか"
+},
+{
+"jp": "{現金|げんきん}でお{願|ねが}いします。",
+"romaji": "genkin de onegai shimasu",
+"zh": "我付現金",
+"say": "現金でお願いします"
+},
+{
+"jp": "カードで。",
+"romaji": "kādo de",
+"zh": "刷卡（後面可接お願いします）",
+"say": "カードで"
+},
+{
+"jp": "Suicaで。",
+"romaji": "suika de",
+"zh": "用 Suica 付",
+"say": "スイカで"
+},
+{
+"jp": "{支払|しはら}い{方法|ほうほう}",
+"romaji": "shiharai hōhō",
+"zh": "付款方式",
+"say": "支払い方法"
+},
+{
+"jp": "お{釣|つ}り",
+"romaji": "otsuri",
+"zh": "找零",
+"say": "お釣り"
+},
+{
+"jp": "レシート",
+"romaji": "reshīto",
+"zh": "收據",
+"say": "レシート"
+},
+{
+"jp": "フォーク",
+"romaji": "fōku",
+"zh": "叉子",
+"say": "フォーク"
+},
+{
+"jp": "{匙|さじ}",
+"romaji": "saji",
+"zh": "湯匙（店裡也常說スプーン）",
+"say": "さじ"
+}
+]
+},
+{
+"title": "{食事|しょくじ} 用餐",
+"romaji": "shokuji",
+"tip": "中文前面標「店員」的，是對方會對你說的話；沒標的是你要說的。",
+"items": [
+{
+"jp": "いらっしゃいませ。",
+"romaji": "irasshaimase",
+"zh": "店員：歡迎光臨",
+"say": "いらっしゃいませ"
+},
+{
+"jp": "{何名様|なんめいさま}ですか？",
+"romaji": "nanmeisama desu ka",
+"zh": "店員：請問幾位？",
+"say": "なんめいさまですか"
+},
+{
+"jp": "〇〇{人|にん}です。",
+"romaji": "〇〇 nin desu",
+"zh": "〇〇位（兩位、六位這樣替換）",
+"say": "まるまるにんです"
+},
+{
+"jp": "2{人|ふたり}",
+"romaji": "futari",
+"zh": "兩個人（2人讀ふたり，不讀にん）",
+"say": "ふたり"
+},
+{
+"jp": "6{人|にん}",
+"romaji": "rokunin",
+"zh": "六個人",
+"say": "ろくにん"
+},
+{
+"jp": "{予約|よやく}している〇〇です。",
+"romaji": "yoyaku shite iru 〇〇 desu",
+"zh": "我是有預約的〇〇（〇〇放名字）",
+"say": "予約している、まるまるです"
+},
+{
+"jp": "こちらへどうぞ。",
+"romaji": "kochira e dōzo",
+"zh": "店員：這邊請",
+"say": "こちらへどうぞ"
+},
+{
+"jp": "お{好|す}きな{席|せき}へどうぞ。",
+"romaji": "osuki na seki e dōzo",
+"zh": "店員：請隨意坐",
+"say": "お好きな席へどうぞ"
+},
+{
+"jp": "カウンター{席|せき}とテーブル{席|せき}、どちらになさいますか？",
+"romaji": "kauntā seki to tēburu seki, dochira ni nasaimasu ka",
+"zh": "店員：請問要吧台座位還是桌位？",
+"say": "カウンター席とテーブル席、どちらになさいますか"
+},
+{
+"jp": "ただ{今|いま}{満席|まんせき}です。",
+"romaji": "tadaima manseki desu",
+"zh": "店員：現在客滿",
+"say": "ただいま満席です"
+},
+{
+"jp": "{少々|しょうしょう}お{待|ま}ちください。",
+"romaji": "shōshō omachi kudasai",
+"zh": "店員：請稍等",
+"say": "少々お待ちください"
+},
+{
+"jp": "ご{注文|ちゅうもん}はお{決|き}まりですか？",
+"romaji": "gochūmon wa okimari desu ka",
+"zh": "店員：決定好要點什麼了嗎？",
+"say": "ご注文はお決まりですか"
+},
+{
+"jp": "お{飲|の}み{物|もの}は{先|さき}にお{伺|うかが}いしてもよろしいですか？",
+"romaji": "onomimono wa saki ni oukagai shite mo yoroshii desu ka",
+"zh": "店員：可以先幫您點飲料嗎？",
+"say": "お飲み物は先にお伺いしてもよろしいですか"
+},
+{
+"jp": "こちらのお{皿|さら}をお{下|さ}げしてもよろしいですか？",
+"romaji": "kochira no osara o osage shite mo yoroshii desu ka",
+"zh": "店員：這個盤子可以收走嗎？",
+"say": "こちらのお皿をお下げしてもよろしいですか"
+},
+{
+"jp": "まだ{決|き}まっていないので、{少|すこ}し{待|ま}ってください。",
+"romaji": "mada kimatte inai node, sukoshi matte kudasai",
+"zh": "還沒決定，請等一下",
+"say": "まだ決まっていないので、少し待ってください"
+},
+{
+"jp": "これを{一|ひと}つお{願|ねが}いします。",
+"romaji": "kore o hitotsu onegai shimasu",
+"zh": "這個請給我一份",
+"say": "これを一つお願いします"
+},
+{
+"jp": "これとこれと…",
+"romaji": "kore to kore to…",
+"zh": "這個和這個…（邊指菜單）",
+"say": "これとこれと"
+},
+{
+"jp": "{氷|こおり}{無|な}しで",
+"romaji": "kōri nashi de",
+"zh": "去冰",
+"say": "こおりなしで"
+},
+{
+"jp": "〇〇{抜|ぬ}きで",
+"romaji": "〇〇 nuki de",
+"zh": "不要加〇〇",
+"say": "まるまる抜きで"
+},
+{
+"jp": "{以上|いじょう}でお{願|ねが}いします。",
+"romaji": "ijō de onegai shimasu",
+"zh": "就這些，麻煩了（點完餐）",
+"say": "以上でお願いします"
+},
+{
+"jp": "お{水|みず}をいただけますか？",
+"romaji": "omizu o itadakemasu ka",
+"zh": "可以給我水嗎？",
+"say": "お水をいただけますか"
+},
+{
+"jp": "{取|と}り{皿|ざら}をいただけますか？",
+"romaji": "torizara o itadakemasu ka",
+"zh": "可以給我小盤子嗎？",
+"say": "とりざらをいただけますか"
+},
+{
+"jp": "{食|た}べきれないので、{持|も}ち{帰|かえ}ってもいいですか？",
+"romaji": "tabekirenai node, mochikaette mo ii desu ka",
+"zh": "吃不完，可以帶走嗎？",
+"say": "食べきれないので、持ち帰ってもいいですか"
+},
+{
+"jp": "お{会計|かいけい}をお{願|ねが}いします。",
+"romaji": "okaikei o onegai shimasu",
+"zh": "麻煩結帳",
+"say": "お会計をお願いします"
+},
+{
+"jp": "{別々|べつべつ}にお{支払|しはら}いしますか？",
+"romaji": "betsubetsu ni oshiharai shimasu ka",
+"zh": "店員：要分開付嗎？",
+"say": "別々にお支払いしますか"
+},
+{
+"jp": "ご{一緒|いっしょ}でよろしいですか？",
+"romaji": "goissho de yoroshii desu ka",
+"zh": "店員：一起付可以嗎？",
+"say": "ご一緒でよろしいですか"
+},
+{
+"jp": "{別々|べつべつ}で",
+"romaji": "betsubetsu de",
+"zh": "分開付",
+"say": "べつべつで"
+},
+{
+"jp": "{一緒|いっしょ}で",
+"romaji": "issho de",
+"zh": "一起付",
+"say": "一緒で"
+}
+]
+},
+{
+"title": "{食事|しょくじ}の{単語|たんご} 用餐單字",
+"romaji": "shokuji no tango",
+"items": [
+{
+"jp": "おすすめ",
+"romaji": "osusume",
+"zh": "推薦",
+"say": "おすすめ"
+},
+{
+"jp": "{定食|ていしょく}",
+"romaji": "teishoku",
+"zh": "套餐",
+"say": "定食"
+},
+{
+"jp": "{単品|たんぴん}",
+"romaji": "tanpin",
+"zh": "單點",
+"say": "単品"
+},
+{
+"jp": "{食|た}べ{放題|ほうだい}",
+"romaji": "tabehōdai",
+"zh": "吃到飽",
+"say": "食べ放題"
+},
+{
+"jp": "{飲|の}み{放題|ほうだい}",
+"romaji": "nomihōdai",
+"zh": "喝到飽",
+"say": "飲み放題"
+},
+{
+"jp": "おかわり",
+"romaji": "okawari",
+"zh": "再來一碗／續杯",
+"say": "おかわり"
+},
+{
+"jp": "{大盛|おおも}り",
+"romaji": "ōmori",
+"zh": "大份",
+"say": "大盛り"
+},
+{
+"jp": "{少|すく}なめ",
+"romaji": "sukuname",
+"zh": "少一點",
+"say": "少なめ"
+},
+{
+"jp": "{辛|から}さ",
+"romaji": "karasa",
+"zh": "辣度",
+"say": "からさ"
+},
+{
+"jp": "{取|と}り{皿|ざら}",
+"romaji": "torizara",
+"zh": "小盤子（分菜用）",
+"say": "とりざら"
+},
+{
+"jp": "{売|う}り{切|き}れ",
+"romaji": "urikire",
+"zh": "賣完了",
+"say": "売り切れ"
+},
+{
+"jp": "{店内|てんない}",
+"romaji": "tennai",
+"zh": "內用",
+"say": "店内"
+},
+{
+"jp": "{持|も}ち{帰|かえ}り",
+"romaji": "mochikaeri",
+"zh": "外帶",
+"say": "持ち帰り"
+}
+]
+},
+{
+"title": "{量詞|りょうし} 數東西",
+"romaji": "ryōshi",
+"tip": "點餐時「これを二つ」就是「這個兩份」。",
+"items": [
+{
+"jp": "{一|ひと}つ",
+"romaji": "hitotsu",
+"zh": "一個",
+"say": "ひとつ"
+},
+{
+"jp": "{二|ふた}つ",
+"romaji": "futatsu",
+"zh": "兩個",
+"say": "ふたつ"
+},
+{
+"jp": "{三|みっ}つ",
+"romaji": "mittsu",
+"zh": "三個",
+"say": "みっつ"
+},
+{
+"jp": "{四|よっ}つ",
+"romaji": "yottsu",
+"zh": "四個",
+"say": "よっつ"
+},
+{
+"jp": "{五|いつ}つ",
+"romaji": "itsutsu",
+"zh": "五個",
+"say": "いつつ"
+},
+{
+"jp": "{六|むっ}つ",
+"romaji": "muttsu",
+"zh": "六個",
+"say": "むっつ"
+}
+]
+},
+{
+"title": "お{買|か}い{物|もの} 購物",
+"romaji": "okaimono",
+"tip": "中文前面標「店員」的，是對方會對你說的話；沒標的是你要說的。",
+"items": [
+{
+"jp": "{試着|しちゃく}してもいいですか？",
+"romaji": "shichaku shite mo ii desu ka",
+"zh": "可以試穿嗎？",
+"say": "試着してもいいですか"
+},
+{
+"jp": "この{商品|しょうひん}を{探|さが}したいんですけど…どこにありますか？",
+"romaji": "kono shōhin o sagashitai n desu kedo… doko ni arimasu ka",
+"zh": "我在找這個商品…請問在哪裡？",
+"say": "この商品を探したいんですけど、どこにありますか"
+},
+{
+"jp": "{他|ほか}のサイズはありますか？",
+"romaji": "hoka no saizu wa arimasu ka",
+"zh": "有其他尺寸嗎？",
+"say": "他のサイズはありますか"
+},
+{
+"jp": "{在庫|ざいこ}はありますか？",
+"romaji": "zaiko wa arimasu ka",
+"zh": "還有庫存嗎？",
+"say": "在庫はありますか"
+},
+{
+"jp": "ちょっと{考|かんが}えます。",
+"romaji": "chotto kangaemasu",
+"zh": "我再考慮一下",
+"say": "ちょっと考えます"
+},
+{
+"jp": "これをください。",
+"romaji": "kore o kudasai",
+"zh": "我要這個",
+"say": "これをください"
+},
+{
+"jp": "{免税|めんぜい}できますか？",
+"romaji": "menzei dekimasu ka",
+"zh": "可以免稅嗎？",
+"say": "免税できますか"
+},
+{
+"jp": "カードをお{預|あず}かりします。",
+"romaji": "kādo o oazukari shimasu",
+"zh": "店員：收您的卡",
+"say": "カードをお預かりします"
+},
+{
+"jp": "こちらのサイズでよろしいですか？",
+"romaji": "kochira no saizu de yoroshii desu ka",
+"zh": "店員：這個尺寸可以嗎？",
+"say": "こちらのサイズでよろしいですか"
+},
+{
+"jp": "{別|べつ}のサイズもお{持|も}ちしますね。",
+"romaji": "betsu no saizu mo omochi shimasu ne",
+"zh": "店員：我也拿別的尺寸給您",
+"say": "別のサイズもお持ちしますね"
+},
+{
+"jp": "{色違|いろちが}いもございます。",
+"romaji": "irochigai mo gozaimasu",
+"zh": "店員：也有其他顏色",
+"say": "色違いもございます"
+},
+{
+"jp": "{暗証番号|あんしょうばんごう}",
+"romaji": "anshō bangō",
+"zh": "密碼（刷卡要輸入的）",
+"say": "暗証番号"
+},
+{
+"jp": "プレゼント{用|よう}",
+"romaji": "purezento yō",
+"zh": "送禮用",
+"say": "プレゼントよう"
+},
+{
+"jp": "{自分用|じぶんよう}",
+"romaji": "jibun yō",
+"zh": "自己用",
+"say": "自分用"
+},
+{
+"jp": "{白|しろ}",
+"romaji": "shiro",
+"zh": "白色",
+"say": "しろ"
+},
+{
+"jp": "{黒|くろ}",
+"romaji": "kuro",
+"zh": "黑色",
+"say": "くろ"
+},
+{
+"jp": "{灰色|はいいろ}",
+"romaji": "haiiro",
+"zh": "灰色",
+"say": "灰色"
+},
+{
+"jp": "S",
+"romaji": "esu",
+"zh": "S 號",
+"say": "エス"
+},
+{
+"jp": "M",
+"romaji": "emu",
+"zh": "M 號",
+"say": "エム"
+},
+{
+"jp": "L",
+"romaji": "eru",
+"zh": "L 號",
+"say": "エル"
+}
+]
+},
+{
+"title": "{方向|ほうこう} 車站和問路",
+"romaji": "hōkō",
+"items": [
+{
+"jp": "{駅|えき}",
+"romaji": "eki",
+"zh": "車站",
+"say": "えき"
+},
+{
+"jp": "〇〇{駅|えき}まで",
+"romaji": "〇〇 eki made",
+"zh": "到〇〇站",
+"say": "まるまるえきまで"
+},
+{
+"jp": "{番線|ばんせん}",
+"romaji": "bansen",
+"zh": "第幾月台",
+"say": "番線"
+},
+{
+"jp": "{乗|の}り{換|か}え",
+"romaji": "norikae",
+"zh": "轉乘",
+"say": "乗り換え"
+},
+{
+"jp": "{各駅停車|かくえきていしゃ}",
+"romaji": "kakueki teisha",
+"zh": "每站都停的車（普通車）",
+"say": "各駅停車"
+},
+{
+"jp": "{道|みち}",
+"romaji": "michi",
+"zh": "路",
+"say": "みち"
+},
+{
+"jp": "{右|みぎ}",
+"romaji": "migi",
+"zh": "右",
+"say": "みぎ"
+},
+{
+"jp": "{左|ひだり}",
+"romaji": "hidari",
+"zh": "左",
+"say": "ひだり"
+},
+{
+"jp": "{曲|ま}がる",
+"romaji": "magaru",
+"zh": "轉彎",
+"say": "曲がる"
+},
+{
+"jp": "{突|つ}き{当|あ}たり",
+"romaji": "tsukiatari",
+"zh": "走到底（盡頭）",
+"say": "突き当たり"
+},
+{
+"jp": "まっすぐ",
+"romaji": "massugu",
+"zh": "直走",
+"say": "まっすぐ"
+}
+]
+}
+]
+},
+{
 "id": "class-2026-11-03",
 "date": "2026-11-03",
 "title": "旅遊會話",
@@ -2546,7 +3202,7 @@ const CLASS_EXAM_SIZE = 20;
 // 意思太接近、不能同時當選項的句子（比對 say 欄位）
 const CLASS_EXAM_CONFLICTS = [
   ['大丈夫です','いらないです','袋はいらないです','温めなくて大丈夫です'],
-  ['にめいです','ふたりです'],
+  ['にめいです','ふたりです','ふたり'],
   ['番線','なんばんせんですか']
 ];
 function classExamConflict(a, b){
